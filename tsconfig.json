@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    // enable latest features
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
+    "target": "esnext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "moduleDetection": "force",
+    "esModuleInterop": true,
+    "allowJs": true,
+    "isolatedModules": true,
+    // Bundler mode
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
+    // Best practices
+    "strict": true,
+    "skipLibCheck": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    // Some stricter flags
+    "useUnknownInCatchVariables": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "outDir": "dist"
+  }
+}

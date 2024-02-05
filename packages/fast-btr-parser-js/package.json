@@ -1,0 +1,14 @@
+{
+  "name": "@internal/fast-btr-parser-js",
+  "version": "1.0.0",
+  "description": "Build Time Rendering JavaScript Parser",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild ./src/index.ts --bundle --outdir=./dist --sourcemap --format=esm --target=esnext"
+  },
+  "devDependencies": {
+    "@internal/fast-btr-protocol": "workspace:*"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "build-time-rendering",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "pnpm --stream -r --parallel run build",
+    "start": "pnpm --filter @example/shadowdom run start",
+    "serve": "pnpm --filter @example/btr run start ./apps/example-shadowdom-app/dist",
+    "btr": "pnpm --filter @internal/fast-btr-build run start ./apps/example-shadowdom-app/dist",
+    "format": "dprint fmt --config dprint.json"
+  },
+  "devDependencies": {
+    "dprint": "^0.45.0",
+    "esbuild": "^0.20.0",
+    "esbuild-plugin-copy": "^2.1.1",
+    "typescript": "^5.3.3"
+  }
+}
