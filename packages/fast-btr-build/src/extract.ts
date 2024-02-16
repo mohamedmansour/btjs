@@ -114,8 +114,6 @@ export async function extractHTML(selector: string = 'html') {
       addLine(tagContent)
     } else if (attributeFastMap.has(prefix + 'signal')) {
       flushStreamResponse('signal', attributeFastMap.get(prefix + 'signal'), tagContent)
-    } else {
-      addLine(tagContent)
     }
 
     // For non signal parent nodes, we need to recurse on children.
@@ -129,10 +127,12 @@ export async function extractHTML(selector: string = 'html') {
         if (node.internalCssModule) {
           // That is the best we can to eliminate flickering, by placing the contents of the CSS module in component.
           let cssContents = await readCSS(node.internalCssModule)
-          addLine(
-            `<style>\n${cssContents.map((line: string) => indent + '    ' + line.trim()).join('\n')}</style>`,
-            indent + '    ',
-          )
+          if (cssContents && cssContents.length > 0) {
+            addLine(
+              `<style>\n${cssContents.map((line: string) => indent + '    ' + line.trim()).join('\n')}</style>`,
+              indent + '    ',
+            )
+          }
 
           // TODO: Doesn't work in Web Platform Yet.
           // addLine(indent + '  <script type="module">import sheet from "' + node.internalCssModule + '" assert { type: "css" };console.log(this);</script>');

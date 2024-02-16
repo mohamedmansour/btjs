@@ -45,7 +45,12 @@ export function HandleBuild(appPath: string, port: number) {
           if (err) {
             reject('Error reading file:' + err)
           } else {
-            resolve(data.split('\n'))
+            const content = data.trim()
+            if (!content || content.length === 0) {
+              resolve([])
+            } else {
+              resolve(content.split('\n'))
+            }
           }
         })
       })
