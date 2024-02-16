@@ -7,8 +7,16 @@ import { join, resolve } from 'node:path'
 export function HandleServe(appPath: string, port: number) {
   appPath = resolve(process.env['INIT_CWD'] || process.cwd(), appPath)
 
-  const itemsDbPath = join(appPath, 'items.json')
+  const dbPath = join(appPath, 'db.json')
   const indexStreamsPath = join(appPath, 'index.streams.json')
+
+  let db: Record<string, {}> = {
+    items: [],
+    appTitle: 'Welcome SSR!',
+  }
+  if (existsSync(dbPath)) {
+    db = JSON.parse(readFileSync(dbPath, 'utf8'))
+  }
 
   const app = express()
   app.use(express.json())
@@ -20,27 +28,18 @@ export function HandleServe(appPath: string, port: number) {
 
   app.post('/api/items', (req, res) => {
     res.status(201).json(req.body)
-    writeFile(itemsDbPath, JSON.stringify(req.body), () => {})
+    db['items'] = req.body
+    writeFile(dbPath, JSON.stringify(db), () => {})
   })
 
   app.get('/', (_req, res) => {
-    let items = []
-    if (existsSync(itemsDbPath)) {
-      items = JSON.parse(readFileSync(itemsDbPath, 'utf8'))
-    }
-
-    const state = {
-      items,
-      appTitle: 'Welcome SSR!',
-    }
-
     if (!streamingProtocol) {
       res.sendStatus(500)
       res.send({ error: 'No streaming protocol found' })
       return
     }
 
-    handleBTR(streamingProtocol, state, res)
+    handleBTR(streamingProtocol, db, res)
   })
 
   app.use(express.static(appPath))
