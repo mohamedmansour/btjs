@@ -63,6 +63,8 @@ export function HandleBuild(appPath: string, port: number) {
         streamResponses.push({ type, value, defaultValue: extra })
       } else if (type === 'raw') {
         streamResponses.push({ type, value })
+      } else if (type === 'when') {
+        streamResponses.push({ type, value })
       } else {
         console.error('Unknown stream type:', type)
       }

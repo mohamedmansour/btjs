@@ -1,15 +1,14 @@
 {
-  "name": "@internal/fast-btr-parser-js",
+  "name": "@internal/fast-btr-eval",
   "version": "1.0.0",
-  "description": "Build Time Rendering JavaScript Parser",
+  "description": "Internal Safe Eval for BRT",
   "main": "./dist/index.js",
   "types": "./src/index.ts",
   "type": "module",
   "scripts": {
     "build": "esbuild ./src/index.ts --bundle --outdir=./dist --sourcemap --format=esm --target=esnext"
   },
-  "devDependencies": {
-    "@internal/fast-btr-protocol": "workspace:*",
+  "dependencies": {
     "@internal/fast-btr-eval": "workspace:*"
   }
 }

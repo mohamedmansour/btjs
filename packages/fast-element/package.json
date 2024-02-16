@@ -8,6 +8,9 @@
     "build": "esbuild ./src/index.ts --bundle --minify --outdir=./dist --sourcemap --format=esm --target=esnext",
     "serve": "esbuild --serve index.ts --bundle --servedir=."
   },
+  "dependencies": {
+    "@internal/fast-btr-eval": "workspace:*"
+  },
   "exports": {
     ".": {
       "import": "./src/index.ts"

@@ -15,10 +15,16 @@ export interface BuildTimeRenderingStreamSignal {
   defaultValue?: string
 }
 
+export interface BuildTimeRenderingStreamWhen {
+  type: 'when'
+  value: string
+}
+
 export type BuildTimeRenderingStream =
   | BuildTimeRenderingStreamRaw
   | BuildTimeRenderingStreamRepeat
   | BuildTimeRenderingStreamSignal
+  | BuildTimeRenderingStreamWhen
 
 export interface BuildTimeRenderingTemplate {
   style: string

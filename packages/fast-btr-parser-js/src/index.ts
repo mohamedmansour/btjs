@@ -1,3 +1,5 @@
+import { findValueByDottedPath, parseExpression, safeEvaluateExpression } from '@internal/fast-btr-eval'
+
 import type { BuildTimeRenderingProtocol } from '@internal/fast-btr-protocol'
 
 export interface ServerHandler {
@@ -36,27 +38,17 @@ export function handleBTR(protocol: BuildTimeRenderingProtocol, state: Object, s
         } else if (stream.defaultValue !== undefined) {
           serverHandler.write(stream.defaultValue)
         }
+        break
+      }
+      case 'when': {
+        const parts = parseExpression(stream.value)
+        const value = safeEvaluateExpression(parts, state)
+        if (!value) {
+          serverHandler.write('style="display: none"')
+        }
+        break
       }
     }
   })
   serverHandler.end()
-}
-
-const findValueByDottedPath = (part: string | number, state: Object) => {
-  let value: any | undefined
-
-  if (isNaN(Number(part))) {
-    const properties = (part as string).split('.')
-    value = state
-    for (const property of properties) {
-      value = value[property]
-      if (value === undefined) {
-        break
-      }
-    }
-  } else {
-    value = Number(part)
-  }
-
-  return value
 }

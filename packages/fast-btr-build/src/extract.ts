@@ -89,13 +89,26 @@ export async function extractHTML(selector: string = 'html') {
             }
           }
         }
+
+        // If the node has a `when` hint, clear the style attribute since it will be set by the protocol.
+        if (name === (prefix + 'when')) {
+          node.style.display = ''
+          if (node.style.cssText === '') {
+            node.removeAttribute('style')
+          }
+        }
         attributeFastMap.set(name, value)
       }
     }
 
-    tag += '>'
-
-    addLine(tag, indent)
+    // For `when` hints, stream the protocol so that caller can set the style attribute.
+    if (attributeFastMap.has(prefix + 'when')) {
+      addLine(tag, indent)
+      flushStreamResponse('when', attributeFastMap.get(prefix + 'when'))
+      addLine('>', indent)
+    } else {
+      addLine(tag + '>', indent)
+    }
 
     let tagContent = undefined
 

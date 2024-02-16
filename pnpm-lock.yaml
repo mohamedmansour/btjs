@@ -80,15 +80,28 @@ importers:
         specifier: ^20.11.17
         version: 20.11.17
 
+  packages/fast-btr-eval:
+    dependencies:
+      '@internal/fast-btr-eval':
+        specifier: workspace:*
+        version: 'link:'
+
   packages/fast-btr-parser-js:
     devDependencies:
+      '@internal/fast-btr-eval':
+        specifier: workspace:*
+        version: link:../fast-btr-eval
       '@internal/fast-btr-protocol':
         specifier: workspace:*
         version: link:../fast-btr-protocol
 
   packages/fast-btr-protocol: {}
 
-  packages/fast-element: {}
+  packages/fast-element:
+    dependencies:
+      '@internal/fast-btr-eval':
+        specifier: workspace:*
+        version: link:../fast-btr-eval
 
 packages:
 

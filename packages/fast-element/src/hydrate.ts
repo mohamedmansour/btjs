@@ -1,3 +1,4 @@
+import { OPERATORS, findValueByDottedPath, parseExpression, safeEvaluateExpression } from '@internal/fast-btr-eval'
 import type { FASTElement } from './fast-element.js'
 export { observer } from './observer.js'
 
@@ -8,33 +9,6 @@ declare global {
 }
 
 const PREFIX = 'f-'
-const OPERATORS = new Set(['&&', '||', '!', '==', '>', '>=', '<', '<='])
-const OPERATOR_REGEX = new RegExp(`(${Array.from(OPERATORS).map(op => op.replace(/\|/g, '\\|')).join('|')})`)
-
-/**
- * Finds a value by a dotted path.
- *
- * @param part The dotted path to the value
- * @param component The component to search for the value.
- * @returns The value found at the dotted path.
- */
-function FindValueByDottedPath(part: string, component: FASTElement) {
-  let value
-  if (isNaN(Number(part))) {
-    const properties = part.split('.')
-    value = component
-    for (const property of properties) {
-      value = value[property]
-      if (value === undefined) {
-        break
-      }
-    }
-  } else {
-    value = Number(part)
-  }
-
-  return value
-}
 
 function SetupSignalAttribute(component: FASTElement, signalValue: string, node: Element) {
   const [firstPart] = signalValue.split('.', 1)
@@ -50,7 +24,7 @@ function SetupSignalAttribute(component: FASTElement, signalValue: string, node:
 
   signal.emit(owningNode.textContent?.trim())
   signal.on((_value: string | number) => {
-    owningNode.textContent = FindValueByDottedPath(signalValue, component)
+    owningNode.textContent = findValueByDottedPath(signalValue, component)
   })
 }
 
@@ -65,7 +39,7 @@ function SetupClickAttribute(component: FASTElement, clickValue: string, node: E
 
 function SetupWhenAttribute(component: FASTElement, whenValue: string, node: Element) {
   // Split the expression into parts
-  const parts = whenValue.split(OPERATOR_REGEX).filter(part => part.length).map(part => part.trim())
+  const parts = parseExpression(whenValue)
 
   // Listen for signal changes to each part.
   parts.forEach(part => {
@@ -83,59 +57,12 @@ function SetupWhenAttribute(component: FASTElement, whenValue: string, node: Ele
   })
 
   function updateDisplay() {
-    let value = evaluateExpression(parts, component)
-    ;(node as HTMLElement).style.display = value ? 'block' : 'none'
+    const value = safeEvaluateExpression(parts, component)
+    const element = node as HTMLElement
+    element.style.display = value ? 'block' : 'none'
   }
 
   updateDisplay()
-}
-
-function evaluateExpression(parts: string[], component: FASTElement): boolean {
-  let value: any = true
-  let operator: string | null = null
-
-  // Evaluate the expression. The only expression supported would be left, operator, right. And can happen
-  // multiple times. Parenthesis are not supported.
-  parts.forEach(part => {
-    if (OPERATORS.has(part)) {
-      operator = part
-    } else {
-      let partValue = FindValueByDottedPath(part, component)
-
-      switch (operator) {
-        case '&&':
-          value = value && partValue
-          break
-        case '||':
-          value = value || partValue
-          break
-        case '!':
-          value = !partValue
-          break
-        case '==':
-          value = value == partValue
-          break
-        case '>':
-          value = value > partValue
-          break
-        case '>=':
-          value = value >= partValue
-          break
-        case '<':
-          value = value < partValue
-          break
-        case '<=':
-          value = value <= partValue
-          break
-        default:
-          value = partValue
-      }
-
-      operator = null
-    }
-  })
-
-  return Boolean(value)
 }
 
 function SetupRepeatAttribute(component: HTMLElement, repeatValue: string, node: Element) {
