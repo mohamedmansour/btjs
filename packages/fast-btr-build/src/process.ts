@@ -25,7 +25,10 @@ export function HandleBuild(appPath: string, port: number) {
 
   const server = app.listen(port, async () => {
     console.log('preparing browser')
-    const browser = await chromium.launch()
+
+    const browser = await chromium.launch({
+      channel: 'msedge',
+    })
     const page = await browser.newPage()
 
     page.on('console', msg => {
