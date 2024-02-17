@@ -22,6 +22,10 @@ function SetupSignalAttribute(component: FASTElement, signalValue: string, node:
     owningNode = (node as HTMLSlotElement).assignedNodes()[0] as HTMLSlotElement
   }
 
+  if (!owningNode) {
+    throw new Error(`No nodes are currently projected into the slot: ${node.outerHTML}`)
+  }
+
   signal.emit(owningNode.textContent?.trim())
   signal.on((_value: string | number) => {
     owningNode.textContent = findValueByDottedPath(signalValue, component)
@@ -90,6 +94,13 @@ function SetupRepeatAttribute(component: HTMLElement, repeatValue: string, node:
       const newNode = document.createElement(componentTag!)
       if (typeof value === 'string') {
         newNode.appendChild(document.createTextNode(value))
+      } else if (typeof value === 'object') {
+        Object.keys(value).forEach((key) => {
+          const slot = document.createElement('span')
+          slot.textContent = value[key]
+          slot.slot = key
+          newNode.appendChild(slot)
+        })
       }
       // TODO: Add support for objects with slots.
       fragment.appendChild(newNode)
