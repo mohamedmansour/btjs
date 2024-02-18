@@ -20,7 +20,8 @@ button {
   top: 5px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: rgba(0,0,0,0.5);
+  background-color: var(--secondary-background-color);
+  color: var(--secondary-text-color);
   margin: 0;
   padding: 10px 20px;
   border-radius: 5px;
