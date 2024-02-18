@@ -34,8 +34,7 @@ export function HandleServe(appPath: string, port: number) {
 
   app.get('/', (_req, res) => {
     if (!streamingProtocol) {
-      res.sendStatus(500)
-      res.send({ error: 'No streaming protocol found' })
+      res.send({ error: 'No BTR protocol file found' })
       return
     }
 
