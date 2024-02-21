@@ -15,7 +15,6 @@ declare global {
 export async function extractHTML(selector: string = 'html') {
   const lines: string[] = []
   let streamResponse: string[] = []
-  const metalines = new Set()
   const prefix = 'f-'
   const cssCache = new Map()
   const templateCache: BuildTimeRenderingStreamTemplateRecords = {}
@@ -51,6 +50,71 @@ export async function extractHTML(selector: string = 'html') {
     window.writeStreamResponse(type, value, defaultValue?.trim())
   }
 
+  function processWhenHint(name: string, node: HTMLElement) {
+    // If the node has a `when` hint, clear the style attribute since it will be set by the protocol.
+    if (name === (prefix + 'when')) {
+      node.style.display = ''
+      if (node.style.cssText === '') {
+        node.removeAttribute('style')
+      }
+    }
+  }
+
+  async function processRepeatHint(name: string, node: HTMLElement) {
+    // Special treatment for repeat hints, we need to extract the template and the style.
+    // This is needed since css modules are not declarative. https://github.com/WICG/webcomponents/issues/939
+    if (name === (prefix + 'repeat')) {
+      const tag = node.getAttribute('w-component')
+      if (tag && !templateCache[tag]) {
+        const repeatNode = document.createElement(tag)
+
+        // Add it to the body so the shadowroot is created.
+        document.body.appendChild(repeatNode)
+
+        const lines = []
+        const templateNode = repeatNode.shadowRoot ? repeatNode.shadowRoot : repeatNode
+        const callback = {
+          addLine: (line: string) => {
+            if (!line || !line.trim()) return
+            lines.push(line)
+          },
+          flushPlainResponse: () => {},
+          flushStreamResponse: () => {},
+        }
+
+        for (const child of Array.from(templateNode.childNodes)) {
+          if (child.nodeType === Node.ELEMENT_NODE) {
+            await visitNode(child as HTMLElement, callback, '  ')
+          } else {
+            lines.push(child.textContent?.trim())
+          }
+        }
+
+        let style = ''
+        if (repeatNode.internalCssModule) {
+          const cssContents = await readCSS(repeatNode.internalCssModule)
+          style = cssContents.join('\n')
+        } else {
+          console.error('No CSS Module found for', tag)
+        }
+
+        templateCache[tag] = {
+          template: lines.join('\n'),
+          style,
+        }
+
+        return tag
+      }
+    }
+    return undefined
+  }
+
+  interface VisitCall {
+    addLine: (line: string | undefined, indent: string) => void
+    flushPlainResponse: () => void
+    flushStreamResponse: (type: string, value: string, defaultValue?: string) => void
+  }
+
   /**
    * Visits a node and its children, printing the HTML representation of the node and its children.
    *
@@ -58,7 +122,7 @@ export async function extractHTML(selector: string = 'html') {
    * @param {string} indent - The current indentation level
    * @returns
    */
-  async function visitNode(node: HTMLElement, indent = '') {
+  async function visitNode(node: HTMLElement, callback: VisitCall, indent = '') {
     let tag = '<' + node.nodeName.toLowerCase()
 
     // Print attributes
@@ -71,43 +135,19 @@ export async function extractHTML(selector: string = 'html') {
       tag += ' ' + name + '="' + value + '"'
 
       if (name.startsWith(prefix)) {
-        // Special treatment for repeat hints, we need to extract the template and the style.
-        // This is needed since css modules are not declarative. https://github.com/WICG/webcomponents/issues/939
-        if (name === (prefix + 'repeat')) {
-          const tag = node.getAttribute('w-component')
-          if (tag && !templateCache[tag]) {
-            const repeatNode = document.createElement(tag)
-            if (repeatNode.internalCssModule) {
-              let cssContents = await readCSS(repeatNode.internalCssModule)
-              repeatTemplate = {
-                tag,
-                template: repeatNode.shadowRoot ? repeatNode.shadowRoot.innerHTML : repeatNode.innerHTML,
-                style: cssContents.join('\n'),
-              }
-            } else {
-              console.error('No CSS Module found for', tag)
-            }
-          }
-        }
-
-        // If the node has a `when` hint, clear the style attribute since it will be set by the protocol.
-        if (name === (prefix + 'when')) {
-          node.style.display = ''
-          if (node.style.cssText === '') {
-            node.removeAttribute('style')
-          }
-        }
+        repeatTemplate = await processRepeatHint(name, node)
+        processWhenHint(name, node)
         attributeFastMap.set(name, value)
       }
     }
 
     // For `when` hints, stream the protocol so that caller can set the style attribute.
     if (attributeFastMap.has(prefix + 'when')) {
-      addLine(tag, indent)
-      flushStreamResponse('when', attributeFastMap.get(prefix + 'when'))
-      addLine('>', indent)
+      callback.addLine(tag, indent)
+      callback.flushStreamResponse('when', attributeFastMap.get(prefix + 'when'))
+      callback.addLine('>', indent)
     } else {
-      addLine(tag + '>', indent)
+      callback.addLine(tag + '>', indent)
     }
 
     let tagContent = undefined
@@ -119,14 +159,10 @@ export async function extractHTML(selector: string = 'html') {
 
     // Stream Response construction.
     if (attributeFastMap.has(prefix + 'repeat')) {
-      templateCache[repeatTemplate!.tag] = {
-        template: repeatTemplate!.template,
-        style: repeatTemplate!.style,
-      }
-      flushStreamResponse('repeat', attributeFastMap.get(prefix + 'repeat'), repeatTemplate!.tag)
-      addLine(tagContent)
+      callback.flushStreamResponse('repeat', attributeFastMap.get(prefix + 'repeat'), repeatTemplate)
+      callback.addLine(tagContent)
     } else if (attributeFastMap.has(prefix + 'signal')) {
-      flushStreamResponse('signal', attributeFastMap.get(prefix + 'signal'), tagContent)
+      callback.flushStreamResponse('signal', attributeFastMap.get(prefix + 'signal'), tagContent)
     }
 
     // For non signal parent nodes, we need to recurse on children.
@@ -134,14 +170,12 @@ export async function extractHTML(selector: string = 'html') {
     if (!attributeFastMap.has(prefix + 'signal')) {
       // Recurse on shadow root children
       if (node.shadowRoot) {
-        // Keep track of the CSS modules in case we need it later.
-        metalines.add(node.internalCssModule)
-        addLine('<template shadowrootmode="open">', indent + '  ')
+        callback.addLine('<template shadowrootmode="open">', indent + '  ')
         if (node.internalCssModule) {
           // That is the best we can to eliminate flickering, by placing the contents of the CSS module in component.
           let cssContents = await readCSS(node.internalCssModule)
           if (cssContents && cssContents.length > 0) {
-            addLine(
+            callback.addLine(
               `<style>\n${cssContents.map((line: string) => indent + '    ' + line.trim()).join('\n')}</style>`,
               indent + '    ',
             )
@@ -153,20 +187,20 @@ export async function extractHTML(selector: string = 'html') {
 
         for (const child of Array.from(node.shadowRoot!.childNodes)) {
           if (child.nodeType === Node.ELEMENT_NODE) {
-            await visitNode(child as HTMLElement, indent + '    ')
+            await visitNode(child as HTMLElement, callback, indent + '    ')
           } else {
-            addLine(child.textContent?.trim(), indent + '    ')
+            callback.addLine(child.textContent?.trim(), indent + '    ')
           }
         }
-        addLine('</template>', indent + '  ')
+        callback.addLine('</template>', indent + '  ')
       }
 
       // Recurse on normal children
       for (const child of Array.from(node.childNodes)) {
         if (child.nodeType === Node.ELEMENT_NODE) {
-          await visitNode(child as HTMLElement, indent + '  ')
+          await visitNode(child as HTMLElement, callback, indent + '  ')
         } else {
-          addLine(child.textContent?.trim(), indent + '  ')
+          callback.addLine(child.textContent?.trim(), indent + '  ')
         }
       }
 
@@ -175,30 +209,24 @@ export async function extractHTML(selector: string = 'html') {
       if (node.nodeName.toLowerCase() === 'template') {
         for (const child of Array.from((node as HTMLTemplateElement).content.childNodes)) {
           if (child.nodeType === Node.ELEMENT_NODE) {
-            await visitNode(child as HTMLElement, indent + '  ')
+            await visitNode(child as HTMLElement, callback, indent + '  ')
           } else {
-            addLine(child.textContent?.trim(), indent + '  ')
+            callback.addLine(child.textContent?.trim(), indent + '  ')
           }
         }
       }
     }
 
     // Print closing tag
-    addLine('</' + node.nodeName.toLowerCase() + '>', indent)
+    callback.addLine('</' + node.nodeName.toLowerCase() + '>', indent)
 
     return lines
   }
 
   const root = document.querySelector<HTMLElement>(selector)
   if (root) {
-    await visitNode(root)
+    await visitNode(root, { addLine, flushPlainResponse, flushStreamResponse })
   }
-
-  // TODO: Doesn't work in Web Platform Yet.
-  // metalines.forEach((line) => {
-  //   const link = `<link as="style" rel="modulepreload" href="${line}">`;
-  //   lines.unshift(link);
-  // });
 
   flushPlainResponse()
 
