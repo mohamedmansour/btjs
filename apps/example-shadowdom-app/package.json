@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "node build.js",
-    "start": "esbuild --watch --serve=3000 ./src/index.ts --bundle --servedir=./www --outdir=./www/js --format=esm --target=esnext"
+    "start": "esbuild --sourcemap --watch --serve=3001 ./src/index.ts --bundle --servedir=./www --outdir=./www/js --format=esm --target=esnext"
   },
   "dependencies": {
     "@internal/fast-element": "workspace:*"
