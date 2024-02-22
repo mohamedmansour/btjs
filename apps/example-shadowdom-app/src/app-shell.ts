@@ -1,7 +1,7 @@
 import { FASTElement, customElement, observer } from '@internal/fast-element'
 import template from './app-shell.template.js'
 
-@customElement({ name: 'app-shell', template, cssModule: '/app-shell.css' })
+@customElement({ name: 'app-shell', template, cssModule: './app-shell.css' })
 export class AppElement extends FASTElement {
   @observer
   toast: string | null = null
