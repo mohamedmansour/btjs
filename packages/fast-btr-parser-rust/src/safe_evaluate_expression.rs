@@ -8,12 +8,13 @@ lazy_static! {
         let mut patterns: Vec<_> = SEPARATORS.iter()
             .map(|&separator| regex::escape(separator))
             .collect();
-        patterns.sort_by(|a, b| b.len().cmp(&a.len()));  // Sort in descending order of length
+        patterns.sort_by(|a, b| b.len().cmp(&a.len()));
         let pattern = patterns.join("|");
         Regex::new(&pattern).unwrap()
     };
 }
 
+// Parses an expression into a vector of strings. The strings are either operators or operands.
 pub fn parse_expression(expression: &str) -> Vec<String> {
     let mut result = Vec::new();
     let mut last = 0;

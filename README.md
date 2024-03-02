@@ -129,8 +129,14 @@ pnpm serve
 
 ### The components
 
+#### The BTR Build in TypeScript
 - **packages/fast-btr-build**: The BTR Build process, that converts a single page application into a build time rendered application. Produces the protocol json file.
 - **packages/fast-btr-eval**: The BTR Expression Evaluator and Object query.
 - **packages/fast-btr-parser-js**: The JavaScript Parser for the BTR protocol. Used when streaming a request. Useful for Node/Bun/JS/Service Workers.
 - **packages/fast-btr-protocol**: The TypeScript bindings for the protocol response.
+
+#### The BTR Parser in Rust
+- **packages/fast-btr-parser-rust**: The Rust Parser for the BTR protocol. Used when streaming a request. Useful for super fast run web severs.
+
+#### The BTR Hydration
 - **packages/fast-element**: We have developed a prototype for a compact web components framework. This framework hydrates the declarative bindings (`f-when`, `f-signal`, `f-repeat`) to its `@observable` within the Web Component. The entire framework is lightweight, with a total size of 3.4KB, which compresses down to just 1.7KB when gzipped.

@@ -2,6 +2,7 @@ extern crate serde_json;
 
 use serde_json::Value;
 
+// Finds a value in a JSON object by a dotted path.
 pub fn find_value_by_dotted_path<'a>(path: &'a str, state: &'a Value) -> Option<&'a Value> {
     let parts: Vec<&str> = path.split('.').collect();
     let mut current_value: &Value = state;
