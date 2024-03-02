@@ -91,6 +91,8 @@ importers:
         specifier: workspace:*
         version: link:../fast-btr-protocol
 
+  packages/fast-btr-parser-rust: {}
+
   packages/fast-btr-protocol: {}
 
   packages/fast-element:
