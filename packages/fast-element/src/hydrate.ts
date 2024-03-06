@@ -41,6 +41,10 @@ function SetupClickAttribute(component: FASTElement, clickValue: string, node: E
   })
 }
 
+function SetupRefAttribute(component: FASTElement, refValue: string, node: Element) {
+  component[refValue] = node
+}
+
 function SetupWhenAttribute(component: FASTElement, whenValue: string, node: Element) {
   // Split the expression into parts
   const parts = parseExpression(whenValue)
@@ -118,16 +122,20 @@ function SetupAttributes(component: FASTElement, node: Element) {
           SetupSignalAttribute(component, attr.value, node)
           break
         }
-        case 'click': {
-          SetupClickAttribute(component, attr.value, node)
-          break
-        }
         case 'repeat': {
           SetupRepeatAttribute(component, attr.value, node)
           break
         }
         case 'when': {
           SetupWhenAttribute(component, attr.value, node)
+          break
+        }
+        case 'click': {
+          SetupClickAttribute(component, attr.value, node)
+          break
+        }
+        case 'ref': {
+          SetupRefAttribute(component, attr.value, node)
           break
         }
         default:
