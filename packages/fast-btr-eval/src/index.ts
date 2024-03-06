@@ -1,5 +1,9 @@
-export const OPERATORS = new Set(['&&', '||', '!', '==', '>', '>=', '<', '<='])
-const OPERATOR_REGEX = new RegExp(`(${Array.from(OPERATORS).map(op => op.replace(/\|/g, '\\|')).join('|')})`)
+const OPERATORS_ARRAY = ['&&', '||', '==', '>=', '<=', '>', '<', '!', '(', ')']
+const OPERATOR_REGEX = new RegExp(
+  `(${OPERATORS_ARRAY.map(op => op.replace(/\|/g, '\\|').replace(/\(/g, '\\(').replace(/\)/g, '\\)')).join('|')})`,
+)
+
+export const OPERATORS = new Set(OPERATORS_ARRAY)
 
 /**
  * Finds a value by a dotted path.
@@ -27,54 +31,102 @@ export function findValueByDottedPath(part: string | number, state: Object) {
   return value
 }
 
-export function parseExpression(expression: string) {
-  return expression.split(OPERATOR_REGEX).filter(part => part.length).map(part => part.trim())
+export function parseExpression(expression: string): string[] {
+  return expression.split(OPERATOR_REGEX).filter(part => part && part.trim().length).map(s => s.trim())
 }
 
-export function safeEvaluateExpression(expressionParts: string[], state: Object): boolean {
-  let value: any = true
-  let operator: string | null = null
+export function safeEvaluateExpression(expression: string[], state: any): boolean {
+  expression.reverse()
+  return evaluate(expression, state)
+}
 
-  // Evaluate the expression. The only expression supported would be left, operator, right. And can happen
-  // multiple times. Parenthesis are not supported.
-  expressionParts.forEach(part => {
-    if (OPERATORS.has(part)) {
-      operator = part
-    } else {
-      let partValue = findValueByDottedPath(part, state)
+function evaluate(tokens: string[], state: any): any {
+  let currentValue = null
+  let currentOperator = null
 
-      switch (operator) {
-        case '&&':
-          value = value && partValue
-          break
-        case '||':
-          value = value || partValue
-          break
-        case '!':
-          value = !partValue
-          break
-        case '==':
-          value = value == partValue
-          break
-        case '>':
-          value = value > partValue
-          break
-        case '>=':
-          value = value >= partValue
-          break
-        case '<':
-          value = value < partValue
-          break
-        case '<=':
-          value = value <= partValue
-          break
-        default:
-          value = partValue
+  while (tokens.length > 0) {
+    let token = tokens.pop()
+
+    switch (token) {
+      case '(': {
+        let value = evaluate(tokens, state)
+        currentValue = applyOperator(currentValue, currentOperator, value)
+        currentOperator = null
+        break
       }
-
-      operator = null
+      case ')':
+        break
+      case '==':
+      case '!=':
+      case '<':
+      case '<=':
+      case '>':
+      case '>=':
+      case '&&':
+      case '||':
+      case '!': {
+        if (currentOperator !== null) {
+          let value = evaluate(tokens, state)
+          currentValue = applyOperator(currentValue, currentOperator, value)
+        }
+        currentOperator = token
+        break
+      }
+      default: {
+        let value = parseValue(token!, state)
+        currentValue = applyOperator(currentValue, currentOperator, value)
+        currentOperator = null
+        break
+      }
     }
-  })
+  }
 
-  return Boolean(value)
+  if (currentOperator !== null) {
+    let value = evaluate(tokens, state)
+    currentValue = applyOperator(currentValue, currentOperator, value)
+  }
+
+  return currentValue
+}
+
+function applyOperator(value1: any, operator: string | null, value2: any): any {
+  switch (operator) {
+    case '==':
+      return Boolean(value1 == value2)
+    case '!=':
+      return Boolean(value1 != value2)
+    case '>':
+      return Boolean(value1 > value2)
+    case '<':
+      return Boolean(value1 < value2)
+    case '>=':
+      return Boolean(value1 >= value2)
+    case '<=':
+      return Boolean(value1 <= value2)
+    case '&&':
+      return Boolean(value1 && value2)
+    case '||':
+      return Boolean(value1 || value2)
+    case '!':
+      return Boolean(!value2)
+    default:
+      return value2
+  }
+}
+
+function parseValue(token: string, state: any): any {
+  if (!isNaN(Number(token))) {
+    return Number(token)
+  }
+  if (token.startsWith('"') || token.startsWith("'")) {
+    return token.slice(1, -1)
+  }
+  switch (token) {
+    case 'true':
+      return true
+    case 'false':
+      return false
+    default:
+      return findValueByDottedPath(token, state) || false
+  }
 }

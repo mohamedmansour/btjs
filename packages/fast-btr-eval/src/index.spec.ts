@@ -3,20 +3,23 @@ import { parseExpression, safeEvaluateExpression } from './index'
 
 describe('safeEvaluateExpression', function() {
   it('should parse expressions correctly', function() {
-    
     const testCases = [
-      { expression: "a && b || c", expected: ["a", "&&", "b", "||", "c"] },
-      { expression: "d == e", expected: ["d", "==", "e"] },
-      { expression: "f > g", expected: ["f", ">", "g"] },
-      { expression: "k&&l", expected: ["k", "&&", "l"] },
-      { expression: "m  ||  n", expected: ["m", "||", "n"] },
-      { expression: "o > p && q <= r || s == t", expected: ["o", ">", "p", "&&", "q", "<=", "r", "||", "s", "==", "t"] },
-    ];
+      { expression: 'a && b || c', expected: ['a', '&&', 'b', '||', 'c'] },
+      { expression: 'd == e', expected: ['d', '==', 'e'] },
+      { expression: 'f > g', expected: ['f', '>', 'g'] },
+      { expression: 'k&&l', expected: ['k', '&&', 'l'] },
+      { expression: 'm  ||  n', expected: ['m', '||', 'n'] },
+      {
+        expression: 'o > p && q <= r || s == t',
+        expected: ['o', '>', 'p', '&&', 'q', '<=', 'r', '||', 's', '==', 't'],
+      },
+      { expression: 'foo.bar && bar', expected: ['foo.bar', '&&', 'bar'] },
+    ]
 
     for (const testCase of testCases) {
-      assert.strictEqual(parseExpression(testCase.expression), testCase.expected, `Expression: ${testCase.expression}`)
+      assert.deepEqual(parseExpression(testCase.expression), testCase.expected, `Expression: ${testCase.expression}`)
     }
-  });
+  })
 
   it('should evaluate expressions correctly', function() {
     const state = {
@@ -35,25 +38,32 @@ describe('safeEvaluateExpression', function() {
     }
 
     const testCases = [
-      { expression: "name.first && age", expected: true },
-      { expression: "age == 30", expected: true },
-      { expression: "favorite.categories.music && favorite.categories.movies", expected: true },
-      { expression: "age > 10", expected: true },
-      { expression: "name && name.first", expected: true },
-      { expression: "is_student", expected: true },
-      { expression: "is_student && name.first", expected: true },
-      { expression: "!is_student || true", expected: true },
-      { expression: "name.first &&", expected: false },
-      { expression: "name.middle", expected: false },
-      { expression: "name.first && (age == 31)", expected: false },
-      { expression: "name.first && false", expected: false },
-      { expression: "\"a\" == \"b\"", expected: false },
-      { expression: "!is_student", expected: false },
-      { expression: "!is_student && name.first", expected: false },
+      { expression: 'name.first && age', expected: true },
+      { expression: 'age == 30', expected: true },
+      { expression: 'favorite.categories.music && favorite.categories.movies', expected: true },
+      { expression: 'favorite.categories.music == favorite.categories.music', expected: true },
+      { expression: 'age > 10', expected: true },
+      { expression: 'name && name.first', expected: true },
+      { expression: 'is_student', expected: true },
+      { expression: 'is_student && name.first', expected: true },
+      { expression: '!is_student || true', expected: true },
+      { expression: '"a" == "a"', expected: true },
+      { expression: 'name.first &&', expected: false },
+      { expression: 'name.middle', expected: false },
+      { expression: 'name.first && (age == 31)', expected: false },
+      { expression: 'name.first && false', expected: false },
+      { expression: 'favorite.categories.music == favorite.categories.movies', expected: false },
+      { expression: '"a" == "b"', expected: false },
+      { expression: '!is_student', expected: false },
+      { expression: '!is_student && name.first', expected: false },
     ]
 
     for (const testCase of testCases) {
-      assert.strictEqual(safeEvaluateExpression(parseExpression(testCase.expression), state), testCase.expected, `Expression: ${testCase.expression}`)
+      assert.strictEqual(
+        safeEvaluateExpression(parseExpression(testCase.expression), state),
+        testCase.expected,
+        `Expression: ${testCase.expression}`,
+      )
     }
   })
 })
