@@ -12,9 +12,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "evalexpr"
+version = "11.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "63b41cb9dd076076058a4523f009c900c582279536d0b2e45a29aa930e083cc5"
+
+[[package]]
 name = "fast-btr-parser-rust"
 version = "0.1.0"
 dependencies = [
+ "evalexpr",
  "lazy_static",
  "regex",
  "serde_json",
