@@ -4,7 +4,7 @@ use regex::Regex;
 use serde_json::Value;
 use serde_json::Number;
 
-const OPERATORS: [&str; 10] = ["&&", "||", "!", "==", ">", ">=", "<", "<=", "(", ")"];
+const OPERATORS: [&str; 10] =  ["&&", "||", "==", ">=", "<=", ">", "<", "!", "(", ")"];
 
 lazy_static! {
     static ref RE: Regex = {
@@ -40,7 +40,7 @@ pub fn parse_expression(expression: &str) -> Vec<String> {
 pub fn safe_evaluate_expression(expression: &str, state: &Value) -> bool {
     let tokens: Vec<String> = parse_expression(expression);
     let mut tokens_ref: Vec<&str> = tokens.iter().map(AsRef::as_ref).collect();
-    tokens_ref.reverse();  // Reverse the tokens to allow us to use the stack efficiently
+    tokens_ref.reverse();
     match evaluate(&mut tokens_ref, state) {
         Value::Bool(b) => b,
         _ => false,
@@ -195,6 +195,7 @@ mod tests {
             TestCaseParse { expression: "k&&l", expected: vec!["k", "&&", "l"] },
             TestCaseParse { expression: "m  ||  n", expected: vec!["m", "||", "n"] },
             TestCaseParse { expression: "o > p && q <= r || s == t", expected: vec!["o", ">", "p", "&&", "q", "<=", "r", "||", "s", "==", "t"] },
+            TestCaseParse { expression: "foo.bar && bar", expected: vec!["foo.bar", "&&", "bar"] }
         ];
 
         for test_case in test_cases {
