@@ -32,12 +32,12 @@ function SetupSignalAttribute(component: FASTElement, signalValue: string, node:
   })
 }
 
-function SetupClickAttribute(component: FASTElement, clickValue: string, node: Element) {
-  if (!component[clickValue]) {
-    throw new Error(`Method ${clickValue} not found`)
+function SetupEventAttribute(component: FASTElement, eventValue: string, node: Element, eventName: string) {
+  if (!component[eventValue]) {
+    throw new Error(`Event Method ${eventValue} not found`)
   }
-  node.addEventListener('click', (e) => {
-    component[clickValue](e)
+  node.addEventListener(eventName, (e) => {
+    component[eventValue](e)
   })
 }
 
@@ -64,7 +64,9 @@ function SetupWhenAttribute(component: FASTElement, whenValue: string, node: Ele
     }
   })
 
+  console.log('parts', parts)
   function updateDisplay() {
+    console.log('updateDisplay', parts)
     const value = safeEvaluateExpression(parts, component)
     const element = node as HTMLElement
     element.style.display = value ? 'block' : 'none'
@@ -130,16 +132,19 @@ function SetupAttributes(component: FASTElement, node: Element) {
           SetupWhenAttribute(component, attr.value, node)
           break
         }
-        case 'click': {
-          SetupClickAttribute(component, attr.value, node)
-          break
-        }
         case 'ref': {
           SetupRefAttribute(component, attr.value, node)
           break
         }
-        default:
+        default: {
+          if (key.startsWith('on')) {
+            SetupEventAttribute(component, attr.value, node, key.substring(2).toLowerCase())
+            break;
+          }
+
           console.warn(`Attribute ${key} not found`)
+          break;
+        }
       }
     }
   })

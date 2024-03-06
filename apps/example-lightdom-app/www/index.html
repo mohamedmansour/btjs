@@ -47,8 +47,8 @@
   <p class="toast" f-when="toast" f-signal="toast"></p>
 
   <div>
-    <button f-click="onClick">Add New</button>
-    <button f-click="onClear">Clear All</button>
+    <button f-onclick="onClick">Add New</button>
+    <button f-onclick="onClear">Clear All</button>
   </div>
   
   <div f-when="items.length > 5">You have more than 5 items!</div>
@@ -63,9 +63,9 @@
 </app-shell>
 
 <template id="app-item-template">
-  <button f-click="onRemove">remove</button>
+  <button f-onclick="onRemove">remove</button>
   <span>
-    <slot f-signal="name" f-click="onRename"></slot>
+    <slot f-signal="name" f-onclick="onRename"></slot>
   </span>
 </template>
 

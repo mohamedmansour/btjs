@@ -1,7 +1,7 @@
 import { FASTElement, customElement, html, observer } from '@internal/fast-element'
 
 const template = html`
-  <h2 f-signal="appTitle" f-click="onChangeTitle">
+  <h2 f-signal="appTitle" f-onclick="onChangeTitle">
     Demo!
   </h2>
 `

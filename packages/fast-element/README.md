@@ -6,4 +6,4 @@ Currently supports declarative bindings for:
 - f-repeat
 - f-signal
 - f-ref
-- f-click
+- f-on[eventName]
