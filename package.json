@@ -10,9 +10,12 @@
     "format": "dprint fmt --config dprint.json"
   },
   "devDependencies": {
+    "@types/mocha": "^10.0.6",
     "dprint": "^0.45.0",
     "esbuild": "^0.20.1",
     "esbuild-plugin-copy": "^2.1.1",
+    "esbuild-register": "^3.5.0",
+    "mocha": "^10.3.0",
     "typescript": "^5.3.3"
   }
 }

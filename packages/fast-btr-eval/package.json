@@ -6,6 +6,7 @@
   "types": "./src/index.ts",
   "type": "module",
   "scripts": {
-    "build": "esbuild ./src/index.ts --bundle --outdir=./dist --sourcemap --format=esm --target=esnext"
+    "build": "esbuild ./src/index.ts --bundle --outdir=./dist --sourcemap --format=esm --target=esnext",
+    "test": "mocha -r esbuild-register '**/*.spec.ts'"
   }
 }
