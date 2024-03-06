@@ -36,8 +36,8 @@ export function parseExpression(expression: string): string[] {
 }
 
 export function safeEvaluateExpression(expression: string[], state: any): boolean {
-  expression.reverse()
-  return evaluate(expression, state)
+  const parts = expression.slice().reverse()
+  return evaluate(parts, state)
 }
 
 function evaluate(tokens: string[], state: any): any {

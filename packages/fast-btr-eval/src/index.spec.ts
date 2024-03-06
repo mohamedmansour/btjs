@@ -66,4 +66,10 @@ describe('safeEvaluateExpression', function() {
       )
     }
   })
+
+  it('should not mutate the expression array', function() {
+    const expressionArray = ['a']
+    safeEvaluateExpression(expressionArray, { a: true })
+    assert.deepEqual(expressionArray, ['a'])
+  })
 })
