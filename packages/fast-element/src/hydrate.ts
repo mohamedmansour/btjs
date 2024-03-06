@@ -11,7 +11,8 @@ declare global {
 const PREFIX = 'f-'
 
 function SetupSignalAttribute(component: FASTElement, signalValue: string, node: Element) {
-  const [firstPart] = signalValue.split('.', 1)
+  const signalValueSplits = signalValue.split('.')
+  const firstPart = signalValueSplits[0]
   const signal = component[`$${firstPart}`]
   if (!signal) {
     throw new Error(`Signal ${signalValue} not found`)
@@ -26,7 +27,11 @@ function SetupSignalAttribute(component: FASTElement, signalValue: string, node:
     throw new Error(`No nodes are currently projected into the slot: ${node.outerHTML}`)
   }
 
-  signal.emit(owningNode.textContent?.trim())
+  // For now we don't support hydrating objects, only strings and numbers.
+  // This could be improved to support objects with slots.
+  if (signalValueSplits.length === 1) {
+    signal.emit(owningNode.textContent?.trim())
+  }
   signal.on((_value: string | number) => {
     owningNode.textContent = findValueByDottedPath(signalValue, component)
   })
