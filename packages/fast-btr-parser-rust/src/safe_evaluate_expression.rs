@@ -296,6 +296,10 @@ mod tests {
                 expected: true,
             },
             TestCaseEval {
+                expression: "favorite.categories.music.length > 0",
+                expected: true,
+            },
+            TestCaseEval {
                 expression: "name.first &&",
                 expected: false,
             },
@@ -309,6 +313,10 @@ mod tests {
             },
             TestCaseEval {
                 expression: "name.first && false",
+                expected: false,
+            },
+            TestCaseEval {
+                expression: "favorite.categories.music.length > 2",
                 expected: false,
             },
             TestCaseEval {
