@@ -1,8 +1,6 @@
 import { FASTElement, customElement } from '@internal/fast-element'
 
-const template = '<button><slot></slot></button>'
-
-@customElement({ name: 'app-button', template, cssModule: './button.css' })
+@customElement({ name: 'app-button' })
 export class AppButton extends FASTElement {
   static get observedAttributes() {
     return ['appearance']

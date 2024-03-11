@@ -9,7 +9,7 @@ declare global {
   }
 
   interface HTMLElement {
-    internalCssModule?: string
+    module?: string
   }
 }
 
@@ -19,6 +19,7 @@ interface ExtractOptions {
 
 export async function extractHTML(options: ExtractOptions = {}): Promise<string[]> {
   const lines: string[] = []
+  const hydratedModules: string[] = []
   let streamResponse: string[] = []
   const prefix = 'f-'
   const cssCache = new Map()
@@ -34,9 +35,14 @@ export async function extractHTML(options: ExtractOptions = {}): Promise<string[
       return cssCache.get(path)
     }
 
-    const contents = await window.readFile(path)
-    cssCache.set(path, contents)
-    return contents
+    try {
+      const contents = await window.readFile(path)
+      cssCache.set(path, contents)
+      return contents
+    } catch (e) {
+      console.error('Error reading CSS file', path, e)
+      return []
+    }
   }
 
   function addLine(line: string | undefined = undefined, indent = '') {
@@ -74,6 +80,12 @@ export async function extractHTML(options: ExtractOptions = {}): Promise<string[
       if (tag && !templateCache[tag]) {
         const repeatNode = document.createElement(tag)
 
+        // Repeat templates should be kept in the body so that the shadowroot can reference
+        // it when that tag is created. The reason, @customElements tag is evaluated right
+        // at beginning before the custom element is registered, so it is expecting a template
+        // to be available. Instead of fetching it from the server, we can keep it in the body.
+        document.getElementById(tag)?.classList.remove('internal-html-module')
+
         // Add it to the body so the shadowroot is created.
         document.body.appendChild(repeatNode)
 
@@ -89,17 +101,16 @@ export async function extractHTML(options: ExtractOptions = {}): Promise<string[
         }
 
         let style = undefined
-        if (repeatNode.internalCssModule) {
+        if (repeatNode.module) {
           if (options.useLinkCss) {
             // callback.addLine(
-            //   `<link rel="stylesheet" href="${repeatNode.internalCssModule}">`,
+            //   `<link rel="stylesheet" href="${repeatNode.module}">`,
             //   '  ',
             // )
-            preloadCss.add(repeatNode.internalCssModule)
+            preloadCss.add(repeatNode.module)
           } else {
-            const cssContents = await readCSS(repeatNode.internalCssModule)
+            const cssContents = await readCSS(`./${repeatNode.module}.css`)
             style = cssContents.join('\n')
-
             removeLinkTagIfExists(repeatNode)
           }
         } else {
@@ -128,7 +139,7 @@ export async function extractHTML(options: ExtractOptions = {}): Promise<string[
   function removeLinkTagIfExists(node: HTMLElement) {
     const selectorNode = node.shadowRoot ? node.shadowRoot : node
     const linkCssExists = selectorNode.querySelector(
-      `link[rel="stylesheet"][href="${node.internalCssModule}"]`,
+      `link[rel="stylesheet"][href="./${node.module}.css"]`,
     )
     if (linkCssExists) {
       linkCssExists.remove()
@@ -150,6 +161,24 @@ export async function extractHTML(options: ExtractOptions = {}): Promise<string[
    */
   async function visitNode(node: HTMLElement, callback: VisitCall, indent = '') {
     const nodeName = node.nodeName.toLowerCase()
+    if (node.classList.contains('internal-html-module')) {
+      // Skip repeat elements for now, this can be optimized later with embedded templates.
+      // Reason of skipping it is that once the server has 0 items in this repeat, it doesn't know
+      // what the HTML is because it isn't cached yet. Hydrated Modules assume the client has it already
+      // in the DOM.
+      hydratedModules.push(node.id)
+      return lines
+    }
+
+    // Requirement for BTR (v1) is that script elements defined at the end.
+    // Right before that, add all the hydrated modules to window scope so that
+    // the client can know which elements are hydrated so it doesn't download the
+    // html.
+    if (nodeName === 'script' && hydratedModules.length > 0) {
+      const hydratedString = JSON.stringify(hydratedModules)
+      callback.addLine(`<script>window.btr = ${hydratedString};</script>`)
+    }
+
     let tag = '<' + nodeName
 
     // Print attributes
@@ -198,15 +227,12 @@ export async function extractHTML(options: ExtractOptions = {}): Promise<string[
       // Recurse on shadow root children
       if (node.shadowRoot) {
         callback.addLine('<template shadowrootmode="open">', indent + '  ')
-        if (node.internalCssModule) {
+
+        if (node.module) {
           if (options.useLinkCss) {
-            // callback.addLine(
-            //   `<link rel="stylesheet" href="${node.internalCssModule}">`,
-            //   indent + '    ',
-            // )
-            preloadCss.add(node.internalCssModule)
+            preloadCss.add(node.module)
           } else {
-            let cssContents = await readCSS(node.internalCssModule)
+            let cssContents = await readCSS(`./${node.module}.css`)
             if (cssContents && cssContents.length > 0) {
               // That is the best we can to eliminate flickering, by placing the contents of the CSS module in component.
               callback.addLine(
@@ -220,7 +246,7 @@ export async function extractHTML(options: ExtractOptions = {}): Promise<string[
           }
 
           // TODO: Doesn't work in Web Platform Yet.
-          // addLine(indent + '  <script type="module">import sheet from "' + node.internalCssModule + '" assert { type: "css" };console.log(this);</script>');
+          // addLine(indent + '  <script type="module">import sheet from "' + node.module + '" assert { type: "css" };console.log(this);</script>');
         }
 
         for (const child of Array.from(node.shadowRoot!.childNodes)) {
@@ -245,13 +271,35 @@ export async function extractHTML(options: ExtractOptions = {}): Promise<string[
       // If the node is a <template>, recurse on its content. Web Components that have an open shadowroot will not
       // have a <template> tag, so we don't need to worry about that case.
       if (nodeName === 'template') {
-        for (const child of Array.from((node as HTMLTemplateElement).content.childNodes)) {
-          if (child.nodeType === Node.ELEMENT_NODE) {
-            await visitNode(child as HTMLElement, callback, indent + '  ')
+        // Templates are static html, store it in a div so that mutation could happen.
+        // Discover what css module we are using, to determine whether links or styles
+        // are needed.
+        const nodeTemplate = document.createElement('div')
+        nodeTemplate.appendChild((node as HTMLTemplateElement).content.cloneNode(true))
+        nodeTemplate.module = node.getAttribute('module') === 'true' ? node.id : undefined
+        if (nodeTemplate.module) {
+          if (options.useLinkCss) {
+            preloadCss.add(nodeTemplate.module)
           } else {
-            callback.addLine(child.textContent?.trim(), indent + '  ')
+            let cssContents = await readCSS(`./${nodeTemplate.module}.css`)
+            if (cssContents && cssContents.length > 0) {
+              const templateStyle = document.createElement('style')
+              templateStyle.textContent = cssContents.map((line: string) => indent + line.trim()).join('\n')
+              nodeTemplate.prepend(templateStyle)
+            }
+            removeLinkTagIfExists(nodeTemplate)
           }
         }
+
+        callback.addLine(nodeTemplate.innerHTML, indent + '  ')
+        // TODO: Keep this here incase we need to recurse on the template content.
+        // for (const child of Array.from((node as HTMLTemplateElement).content.childNodes)) {
+        //   if (child.nodeType === Node.ELEMENT_NODE) {
+        //     await visitNode(child as HTMLElement, callback, indent + '  ')
+        //   } else {
+        //     callback.addLine(child.textContent?.trim(), indent + '  ')
+        //   }
+        // }
       }
     }
 
@@ -273,5 +321,5 @@ export async function extractHTML(options: ExtractOptions = {}): Promise<string[
   window.writeTemplates(JSON.stringify(templateCache, null, 2))
 
   // Web Platform doesn't support CSS Modules for css in JS.
-  return window.writePreload('css', Array.from(preloadCss), lines)
+  return window.writePreload('css', Array.from(preloadCss).map(c => `./${c}.css`), lines)
 }

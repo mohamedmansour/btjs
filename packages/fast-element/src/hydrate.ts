@@ -6,6 +6,9 @@ declare global {
   interface HTMLElement {
     [key: string]: any
   }
+  interface Window {
+    btr: string[]
+  }
 }
 
 const PREFIX = 'f-'

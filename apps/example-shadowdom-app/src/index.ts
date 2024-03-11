@@ -3,7 +3,7 @@
 import './app-shell.js'
 import './app-item.js'
 import './app-header.js'
-import './button.js'
+import './app-button.js'
 
 new PerformanceObserver((list) => {
   list.getEntries().forEach((entry) => {

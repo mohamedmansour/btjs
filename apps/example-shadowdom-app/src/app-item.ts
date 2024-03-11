@@ -1,7 +1,6 @@
 import { FASTElement, customElement, observer } from '@internal/fast-element'
-import template from './app-item.template.js'
 
-@customElement({ name: 'app-item', template, cssModule: './app-item.css' })
+@customElement({ name: 'app-item' })
 export class AppItemElement extends FASTElement {
   @observer
   name: string | undefined

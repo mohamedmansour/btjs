@@ -5,100 +5,98 @@ type ConstructableHTMLElement = {
 interface FASTElementDefinition {
   name: string
   template?: string
-  templateInline?: string
-  cssModule?: string
+  styles?: string
+  module?: boolean
 }
 
-const cssModuleMap = new Map<string, string | CSSStyleSheet | HTMLElement>()
+const hydratedComponents = new Map<string, string>((window.btr || []).map(key => [key, '']))
+const componentCache = new Map<string, HTMLTemplateElement>()
+const mainEntryPoint = document.getElementById('main-entry')!
+
+function cacheTemplate(name: string, html: string, isModule: boolean = true, appendToBody = true) {
+  const template = document.createElement('template')
+  template.innerHTML = html
+  template.id = name
+  template.setAttribute('module', String(isModule))
+  if (appendToBody) {
+    template.className = 'internal-html-module'
+    mainEntryPoint.parentNode!.insertBefore(template, mainEntryPoint)
+  }
+  componentCache.set(name, template)
+}
+
+/**
+ * Import the module as a <template> element. When the customElement is created, it will
+ * use the template to render the shadowRoot.
+ */
+function importModule(definition: FASTElementDefinition): Promise<void> {
+  // Already in the component in cache, no need to fetch it again.
+  if (componentCache.has(definition.name)) {
+    return Promise.resolve()
+  }
+
+  // When the BTR Build Process already discovered the component, we don't need to fetch it again.
+  if (hydratedComponents.has(definition.name)) {
+    return Promise.resolve()
+  }
+
+  // Not a module, just a template. When exists, assume that is the component. Used for repeats.
+  const templateTag = document.getElementById(definition.name) as HTMLTemplateElement
+  if (templateTag) {
+    componentCache.set(definition.name, templateTag)
+    definition.module = templateTag.getAttribute('module') === 'true'
+    return Promise.resolve()
+  }
+
+  // Not a module, just a template and styles.
+  if (!definition.module) {
+    if (!definition.template && !definition.styles) {
+      return Promise.reject('No template or styles provided')
+    }
+
+    cacheTemplate(definition.name, `<style>${definition.styles}</style>${definition.template}`, definition.module)
+    return Promise.resolve()
+  }
+
+  // Module, fetch the HTML and CSS.
+  return new Promise<void>((resolve, reject) => {
+    const moduleHtml = `./${definition.name}.html`
+    const moduleCss = `./${definition.name}.css`
+
+    fetch(moduleHtml)
+      .then(response => response.text())
+      .then(html => {
+        cacheTemplate(definition.name, `<link rel="stylesheet" href="${moduleCss}">${html}`, definition.module)
+        resolve()
+      })
+      .catch(error => {
+        console.error(`Failed to load HTML module: ${error}`)
+        reject(error)
+      })
+  })
+}
 
 export function customElement(definition: FASTElementDefinition) {
+  if (definition.module === undefined) {
+    definition.module = true
+  }
+
   return function(type: ConstructableHTMLElement) {
     class NewConstructor extends type {
-      internalCssModule: string | undefined
+      module: string | undefined = definition.module ? definition.name : undefined
       constructor(...args: any[]) {
         super(...args)
-        // Do stuff if ShadowDOM.
-        if (this.children.length === 0) {
-          if (!this.shadowRoot) {
-            const shadowRoot = this.attachShadow({ mode: 'open' })
-            this.internalStyleRender(shadowRoot)
-            this.internalTemplateRender(shadowRoot)
-          } else {
-            this.internalStyleRender(this.shadowRoot)
-          }
-        }
-      }
-
-      internalTemplateRender(shadowRoot: ShadowRoot) {
-        if (definition.templateInline) {
-          const templateElement = document.getElementById(definition.templateInline) as HTMLTemplateElement | null
-          if (templateElement) {
-            const clone = templateElement.content.cloneNode(true)
-            shadowRoot.appendChild(clone)
-          }
-        } else if (definition.template) {
-          const template = document.createElement('template')
-          template.innerHTML = definition.template
-          shadowRoot.appendChild(template.content.cloneNode(true))
-        }
-      }
-
-      internalStyleRender(shadowRoot: ShadowRoot) {
-        if (definition.cssModule) {
-          // Tag the cssModule to the element so we can read it while post build.
-          this.internalCssModule = definition.cssModule
-
-          // Not cached yet. Since we are using style tags for elminating flickr, caching the style tag so new
-          // instances of the same component can reuse the same style tag.
-          if (!cssModuleMap.has(definition.cssModule)) {
-            // If we have a style tag, cache its content.
-            const cssText = shadowRoot.querySelector('style')
-            if (cssText?.textContent) {
-              cssModuleMap.set(definition.cssModule, cssText)
-            } else {
-              const cssLink = shadowRoot.querySelector('link')
-              if (!cssLink?.href) {
-                const link = document.createElement('link')
-                link.rel = 'stylesheet'
-                link.href = definition.cssModule
-                shadowRoot.prepend(link)
-                cssModuleMap.set(definition.cssModule, link)
-              } else {
-                cssModuleMap.set(definition.cssModule, cssLink)
-              }
-              // Would be nice to use CSS modules but this fetches as "script" making it not cacheable.
-              // import(definition.cssModule, { assert: { type: 'css' } })
-              //   .then(module => {
-              //     cssModuleMap.set(definition.cssModule!, module.default)
-              //     shadowRoot.adoptedStyleSheets = [module.default]
-              //   })
-            }
-          } else {
-            // If we have a cached style tag, use it. Can be either a string or a CSSStyleSheet.
-            const cssCachedItem = cssModuleMap.get(definition.cssModule)! as string | CSSStyleSheet | HTMLElement
-            if (cssCachedItem instanceof CSSStyleSheet) {
-              shadowRoot.adoptedStyleSheets = [cssCachedItem]
-            } else if (cssCachedItem instanceof HTMLElement) {
-              shadowRoot.prepend(cssCachedItem.cloneNode(true))
-            } else {
-              const css = document.createElement('style')
-              css.textContent = cssCachedItem
-              shadowRoot.prepend(css)
-            }
-          }
-          // TODO: Reuse code if we can but we can't.
-          // import(definition.cssModule, { assert: { type: 'css' }}).then((module) => {
-          //   shadowRoot.adoptedStyleSheets = [module.default];
-          // });
-          // TODO: Cannot do link cause it isn't a module, it refetches.
-          // const link = document.createElement('link');
-          // link.rel = 'stylesheet';
-          // link.href = definition.cssModule;
-          // shadowRoot.prepend(link);
+        if (!this.shadowRoot) {
+          const shadowRoot = this.attachShadow({ mode: 'open' })
+          shadowRoot.appendChild(componentCache.get(definition.name)!.content.cloneNode(true))
+        } else if (!componentCache.has(definition.name)) {
+          cacheTemplate(definition.name, this.shadowRoot!.innerHTML, definition.module, false)
         }
       }
     }
 
-    customElements.define(definition.name, NewConstructor)
+    importModule(definition).then(() => {
+      customElements.define(definition.name, NewConstructor)
+    })
   }
 }

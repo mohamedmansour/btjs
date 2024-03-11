@@ -125,13 +125,16 @@ export function HandleBuild(appPath: string, options: BuildOptions) {
     })
 
     console.log('dumping stream')
-    const htmlLines = await page.evaluate(extractHTML, options)
-
-    writeFile(join(appPath, 'index.debug.html'), htmlLines.join('\n'), (err) => {
-      if (err) {
-        console.error('Error writing debug file:', err)
-      }
-    })
+    try {
+      const htmlLines = await page.evaluate(extractHTML, options)
+      writeFile(join(appPath, 'index.debug.html'), htmlLines.join('\n'), (err) => {
+        if (err) {
+          console.error('Error writing debug file:', err)
+        }
+      })
+    } catch (e) {
+      console.error('Error extracting HTML:', e)
+    }
 
     const streamProtocol: BuildTimeRenderingProtocol = {
       streams: streamResponses,
