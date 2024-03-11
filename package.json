@@ -4,6 +4,7 @@
   "main": "index.js",
   "scripts": {
     "build": "pnpm --stream -r --parallel run build",
+    "test": "pnpm --stream -r --parallel run test",
     "start": "pnpm --filter @example/shadowdom run start",
     "serve": "pnpm --filter @example/btr-server-js run start ./apps/example-shadowdom-app/dist",
     "btr": "pnpm --filter @internal/fast-btr-build-js run start ./apps/example-shadowdom-app/dist",
