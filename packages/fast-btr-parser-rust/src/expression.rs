@@ -1,4 +1,4 @@
-use crate::find_value_by_dotted_path::find_value_by_dotted_path;
+use crate::values::*;
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde_json::Number;
