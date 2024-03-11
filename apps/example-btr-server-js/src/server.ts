@@ -1,33 +1,24 @@
-import { BTRServer } from '@internal/fast-btr-server-js'
-import { existsSync, readFileSync, writeFile } from 'node:fs'
+import { BTRServer, StateFile } from '@internal/fast-btr-server-js'
 import { join, resolve } from 'node:path'
 
 export function HandleServe(appPath: string, port: number) {
   appPath = resolve(process.env['INIT_CWD'] || process.cwd(), appPath)
 
-  const dbPath = join(appPath, 'db.json')
   const server = new BTRServer(appPath, port)
-
-  // Default State.
-  let db: Record<string, {}> = {
+  const state = new StateFile(appPath, {
     items: [],
     appTitle: 'Welcome Build Time Rendering (BTR)!',
-  }
-
-  // Check if state exists and load it.
-  if (existsSync(dbPath)) {
-    db = JSON.parse(readFileSync(dbPath, 'utf8'))
-  }
+  })
 
   // Create API endpoint to handle POST requests.
   server.app.post('/api/items', (req, res) => {
     res.status(201).json(req.body)
-    db['items'] = req.body
-    writeFile(dbPath, JSON.stringify(db), () => {})
+    state.data['items'] = req.body
+    state.flush()
   })
 
   // Create BTR endpoint for /
-  server.addHandler('get', '/', join(appPath, 'index.streams.json'), db)
+  server.addHandler('get', '/', join(appPath, 'index.streams.json'), state.data)
 
   // Start the server.
   server.start()

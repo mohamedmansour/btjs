@@ -2,8 +2,8 @@
   "name": "@internal/fast-btr-server-js",
   "version": "1.0.0",
   "description": "Example Counter App",
-  "main": "./dist/server.js",
-  "types": "./src/server.ts",
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
   "type": "module",
   "scripts": {
     "build": "esbuild ./src/*.ts --outdir=./dist --sourcemap --format=esm --target=esnext --platform=node"
