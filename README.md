@@ -186,3 +186,7 @@ pnpm serve
 
 - **apps/example-shadowdom-app**: The TODO App using the FASTElement framework with BTR Hints.
 - **apps/example-btr-server-js**: The TODO App BTR Server that streams the BTR protocol
+
+#### The BTR Server Implementations
+
+- **packages/fast-btr-server-js**: The BTR Server implemenation.
