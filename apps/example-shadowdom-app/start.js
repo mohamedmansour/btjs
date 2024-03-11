@@ -10,7 +10,6 @@ const context = await esbuild.context({
   format: 'esm',
   target: 'esnext',
   outdir: './dist',
-
   plugins: [
     copy({
       resolveFrom: 'cwd',
@@ -38,4 +37,4 @@ const { host, port } = await context.serve({
   },
 })
 
-console.log(`[  ready] http://${host}:${port}/`)
+console.log(`[  ready] http://localhost:${port}/`)
