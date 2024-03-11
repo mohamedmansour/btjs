@@ -2,7 +2,7 @@
 
 The Build Time Rendering Architecture, abbreviated as BTR, is a design that amalgamates the insights gained from integrating Islands, Server-Side Rendering (SSR), and Static Site Generation (SSG). Unlike traditional methods, BTR determines the rendering process in advance, guided by cues provided by the web application itself. A key feature of BTR is the introduction of a simplified streaming protocol. This protocol is language-agnostic, enabling web servers written in any programming language to deliver experiences akin to SSR, eliminating the dependency on Node.js.
 
-# Enhanced Support for Service Workers with BTR
+## Enhanced Support for Service Workers with BTR
 
 Service Workers play a pivotal role in the Build Time Rendering (BTR) architecture, primarily due to their ability to cache and manage resources. BTR generates a static rendering protocol file during the build process. This file, being static, can be cached on the client-side, significantly reducing the load on the server and improving the application's performance.
 
@@ -67,6 +67,20 @@ The `f-repeat` binding represents an array of templates.
 ```
 
 In this scenario, the `users` class variable within the Web Component is assigned a list of names, mirroring its current children. Similar to the other bindings, any mutation in this list prompts a corresponding mutation in the DOM.
+
+### f-ref
+
+The `f-ref` represents a reference to that DOM element.
+
+```html
+<canvas f-ref="drawingCanvas"></canvas>
+```
+
+The Web Component will have a private member named `drawingCanvas` with type `HTMLCanvasElement` to have a one way binding.
+
+### f-on[eventName]
+
+The `f-on` element, allows adding any event handler including custom events, the `eventName` is generic, such as `f-onclick`, `f-onkeyup`, etc
 
 ## BTR Protocol and Server Handler
 
