@@ -5,6 +5,7 @@ import type {
 } from '@internal/fast-btr-protocol-js'
 import express from 'express'
 import { existsSync, readFile, writeFile } from 'node:fs'
+import { AddressInfo } from 'node:net'
 import { join, resolve } from 'node:path'
 import { chromium } from 'playwright'
 import { extractHTML } from './extract.js'
@@ -16,7 +17,6 @@ interface BuildOptions {
 
 export function HandleBuild(appPath: string, options: BuildOptions) {
   appPath = resolve(process.env['INIT_CWD'] || process.cwd(), appPath)
-
   if (!existsSync(appPath)) {
     console.error('App not found:', appPath)
     process.exit(1)
@@ -29,7 +29,7 @@ export function HandleBuild(appPath: string, options: BuildOptions) {
   let streamTemplates: BuildTimeRenderingStreamTemplateRecords = {}
   let headChunkIndex = 0
 
-  const server = app.listen(options.port, async () => {
+  const server = app.listen(async () => {
     console.log('preparing browser')
 
     const browser = await chromium.launch({
@@ -46,7 +46,8 @@ export function HandleBuild(appPath: string, options: BuildOptions) {
     })
 
     console.log('visiting app')
-    await page.goto(`http://localhost:${options.port}`)
+    const address = server.address() as AddressInfo
+    await page.goto(`http://localhost:${address.port}`)
 
     await page.exposeFunction('readFile', (path: string) => {
       return new Promise((resolve, reject) => {
