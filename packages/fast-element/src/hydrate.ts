@@ -41,7 +41,13 @@ function SetupSignalAttribute(component: FASTElement, signalValue: string, node:
       } else if (typeof signal.value === 'number') {
         signal.emit(Number(value))
       } else if (signal.value) {
-        throw new Error(`TODO: Signal ${signalValue} is not a string or number`)
+        throw new Error(
+          `TODO: Signal ${signalValue} is not a string or number, current signal value "${signal.value}", dom value: ${value}`,
+        )
+      } else {
+        // Emit the value of the node if the signal has no value.
+        // TODO: This could be improved if the signal has type information so we can infer what time to decode.
+        signal.emit(value)
       }
     } else if (signal.value !== undefined) {
       // Update display for the initial value of the signal.
