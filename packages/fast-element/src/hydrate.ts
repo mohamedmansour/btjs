@@ -35,7 +35,14 @@ function SetupSignalAttribute(component: FASTElement, signalValue: string, node:
   if (signalValueSplits.length === 1) {
     // Make sure emitting the contents of the node if any nodes exists, including text nodes.
     if (signal.value === undefined || (owningNode.nodeType === Node.ELEMENT_NODE && owningNode.childNodes.length > 0)) {
-      signal.emit(owningNode.textContent?.trim())
+      let value = owningNode.textContent?.trim()
+      if (typeof signal.value === 'string') {
+        signal.emit(value)
+      } else if (typeof signal.value === 'number') {
+        signal.emit(Number(value))
+      } else {
+        throw new Error(`TODO: Signal ${signalValue} is not a string or number`)
+      }
     } else if (signal.value !== undefined) {
       // Update display for the initial value of the signal.
       owningNode.textContent = signal.value
@@ -170,4 +177,5 @@ export function hydrate(component: FASTElement) {
   nodes.forEach((node) => {
     SetupAttributes(component, node)
   })
+  component.hydrated = true
 }

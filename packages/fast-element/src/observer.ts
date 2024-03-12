@@ -22,7 +22,7 @@ export function observer<T>(target: HTMLElement, propertyKey: any): any {
           this[signalKey] = new Signal<T>()
         }
         this[signalKey].emit(newVal)
-        if (this[`${propertyKey}Changed`]) {
+        if (this.hydrated && this[`${propertyKey}Changed`]) {
           this[`${propertyKey}Changed`].call(this, newVal)
         }
       },
