@@ -9,6 +9,14 @@ interface FASTElementDefinition {
   module?: boolean
 }
 
+interface HydrationTracker {
+  name: string
+  startTime: number
+  endTime: number
+}
+
+export const hydrationTracker: HydrationTracker[] = []
+
 const hydratedComponents = new Map<string, string>((window.btr || []).map(key => [key, '']))
 const componentCache = new Map<string, HTMLTemplateElement>()
 const mainEntryPoint = document.getElementById('main-entry')!
@@ -92,6 +100,13 @@ export function customElement(definition: FASTElementDefinition) {
         } else if (!componentCache.has(definition.name)) {
           cacheTemplate(definition.name, this.shadowRoot!.innerHTML, definition.module, false)
         }
+      }
+
+      connectedCallback() {
+        const tracker = { name: definition.name, startTime: performance.now(), endTime: 0 }
+        hydrationTracker.push(tracker)
+        super['connectedCallback'] && super['connectedCallback']()
+        tracker.endTime = performance.now()
       }
     }
 

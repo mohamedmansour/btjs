@@ -39,7 +39,9 @@ export class BTRServer {
       const streamingProtocol = JSON.parse(readFileSync(protocolFile, 'utf8')) as BuildTimeRenderingProtocol
       this.#handlerMap.set(handlerKey, streamingProtocol)
       this.#app[method](path, (_req, res) => {
+        console.time(handlerKey)
         handleBTR(streamingProtocol, state, res)
+        console.timeEnd(handlerKey)
       })
     } catch (e) {
       throw new Error('Invalid BTR protocol file')

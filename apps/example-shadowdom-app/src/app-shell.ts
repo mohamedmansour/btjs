@@ -12,10 +12,7 @@ export class AppElement extends FASTElement {
   private itemId = 0
 
   connectedCallback(): void {
-    performance.mark('start-hydration')
     super.connectedCallback()
-    performance.mark('end-hydration')
-    performance.measure('hydration', 'start-hydration', 'end-hydration')
 
     this.addEventListener('item-removed', (event: Event) => {
       const customEvent = event as CustomEvent<string>
