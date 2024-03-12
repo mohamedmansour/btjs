@@ -24,6 +24,7 @@ dependencies = [
  "evalexpr",
  "lazy_static",
  "regex",
+ "serde",
  "serde_json",
 ]
 
