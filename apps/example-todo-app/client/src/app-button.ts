@@ -1,4 +1,4 @@
-import { FASTElement, customElement } from '@internal/fast-element'
+import { FASTElement, customElement } from '@btjs/element'
 
 @customElement({ name: 'app-button' })
 export class AppButton extends FASTElement {

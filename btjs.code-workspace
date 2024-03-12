@@ -4,7 +4,7 @@
 			"path": "."
 		},
 		{
-			"path": "./packages/fast-btr-parser-rust"
+			"path": "./packages/@btjs/parser-rust"
 		}
 	],
 	"settings": {}

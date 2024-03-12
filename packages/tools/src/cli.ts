@@ -1,8 +1,8 @@
-import * as btr from '@internal/fast-btr-build-js'
 import esbuild from 'esbuild'
 import { AssetPair, copy } from 'esbuild-plugin-copy'
 import fs from 'node:fs'
 import path from 'node:path'
+import { HandleBuild } from './process.js'
 
 interface Options {
   port: number
@@ -100,7 +100,7 @@ export async function HandleWebBuild(entryPoint: string, options: Options) {
 export async function HandleNodeBuild(entryPoint: string, options: Options) {
   const config = buildNodeOptions(entryPoint, options.out)
   await esbuild.build(config).catch(() => process.exit(1))
-  btr.HandleBuild(options.client!, { port: 3001, useLinkCss: false })
+  HandleBuild(options.client!, { port: 3001, useLinkCss: false })
 }
 
 function getFileSizeInBytes(path: string): number {

@@ -1,5 +1,5 @@
 {
-  "name": "build-time-rendering",
+  "name": "build-time-js",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {

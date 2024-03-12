@@ -1,4 +1,4 @@
-import { FASTElement, customElement, observer } from '@internal/fast-element'
+import { FASTElement, customElement, observer } from '@btjs/element'
 
 @customElement({ name: 'app-shell' })
 export class AppElement extends FASTElement {

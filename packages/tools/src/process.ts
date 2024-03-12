@@ -2,7 +2,7 @@ import type {
   BuildTimeRenderingProtocol,
   BuildTimeRenderingStream,
   BuildTimeRenderingStreamTemplateRecords,
-} from '@internal/fast-btr-protocol-js'
+} from '@btjs/protocol-js'
 import express from 'express'
 import { existsSync, readFile, writeFile } from 'node:fs'
 import { AddressInfo } from 'node:net'

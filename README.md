@@ -169,24 +169,25 @@ pnpm serve
 
 #### The BTR Build in TypeScript
 
-- **packages/fast-btr-build-js**: The BTR Build process, that converts a single page application into a build time rendered application. Produces the protocol json file.
-- **packages/fast-btr-eval-js**: The BTR Expression Evaluator and Object query.
-- **packages/fast-btr-parser-js**: The JavaScript Parser for the BTR protocol. Used when streaming a request. Useful for Node/Bun/JS/Service Workers.
-- **packages/fast-btr-protocol-js**: The TypeScript bindings for the protocol response.
+- **packages/tools**: The BTR Build process, that converts a single page application into a build time rendered application. Produces the protocol json file.
+- **packages/eval-js**: The BTR Expression Evaluator and Object query.
+- **packages/parser-js**: The JavaScript Parser for the BTR protocol. Used when streaming a request. Useful for Node/Bun/JS/Service Workers.
+- **packages/protocol-js**: The TypeScript bindings for the protocol response.
 
 #### The BTR Parser in Rust
 
-- **packages/fast-btr-parser-rust**: The Rust Parser for the BTR protocol. Used when streaming a request. Useful for super fast run web severs.
+- **packages/parser-rust**: The Rust Parser for the BTR protocol. Used when streaming a request. Useful for super fast run web severs.
 
 #### The BTR Hydration
 
-- **packages/fast-element**: We have developed a prototype for a compact web components framework. This framework hydrates the declarative bindings (`f-when`, `f-signal`, `f-repeat`) to its `@observable` within the Web Component. The entire framework is lightweight, with a total size of 3.4KB, which compresses down to just 1.7KB when gzipped.
+- **packages/element**: We have developed a prototype for a compact web components framework. This framework hydrates the declarative bindings (`f-when`, `f-signal`, `f-repeat`) to its `@observable` within the Web Component. The entire framework is lightweight, with a total size of 3.4KB, which compresses down to just 1.7KB when gzipped.
 
 #### The BTR Example Application
 
-- **apps/example-shadowdom-app**: The TODO App using the FASTElement framework with BTR Hints.
-- **apps/example-btr-server-js**: The TODO App BTR Server that streams the BTR protocol
+- **apps/example-todo-app**: The TODO App using the FASTElement framework with BTR Hints.
+- **apps/example-counter-app**: The Counter App using the FASTElement framework with BTR Hints.
+
 
 #### The BTR Server Implementations
 
-- **packages/fast-btr-server-js**: The BTR Server implemenation.
+- **packages/server-express**: The BTR Server implemenation.

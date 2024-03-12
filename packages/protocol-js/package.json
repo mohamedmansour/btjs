@@ -1,5 +1,5 @@
 {
-  "name": "@internal/fast-btr-protocol-js",
+  "name": "@btjs/protocol-js",
   "version": "1.0.0",
   "description": "FAST Build Time Rendering Protocol Types",
   "type": "module",

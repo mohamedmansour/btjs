@@ -1,4 +1,4 @@
-import { BTRServer, StateFile } from '@internal/fast-btr-server-js'
+import { BTRServer, StateFile } from '@btjs/server-express'
 import { Command } from 'commander'
 import { join } from 'node:path'
 

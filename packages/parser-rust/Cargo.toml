@@ -1,5 +1,5 @@
 [package]
-name = "fast-btr-parser-rust"
+name = "btjs-parser"
 version = "0.1.0"
 edition = "2021"
 
@@ -11,5 +11,5 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.114"
 
 [lib]
-name = "fast_btr_parser"
+name = "btjs_parser"
 path = "src/lib.rs"

@@ -12,10 +12,10 @@
     "start:btr": "node ./dist/server/server.js ./dist/client"
   },
   "dependencies": {
-    "@internal/fast-element": "workspace:*"
+    "@btjs/element": "workspace:*"
   },
   "devDependencies": {
-    "@internal/fast-btr-tools": "workspace:*",
-    "@internal/fast-btr-server-js": "workspace:*"
+    "@btjs/tools": "workspace:*",
+    "@btjs/server-express": "workspace:*"
   }
 }

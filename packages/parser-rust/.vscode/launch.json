@@ -13,7 +13,7 @@
           "test",
           "--no-run",
           "--lib",
-          "--package=fast-btr-parser-rust"
+          "--package=@btjs/parser-rust"
         ],
         "filter": {
           "name": "fast_btr_parser",

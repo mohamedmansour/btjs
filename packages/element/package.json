@@ -1,5 +1,5 @@
 {
-  "name": "@internal/fast-element",
+  "name": "@btjs/element",
   "version": "1.0.0",
   "description": "",
   "main": "./src/index.ts",
@@ -9,7 +9,7 @@
     "serve": "esbuild --serve index.ts --bundle --servedir=."
   },
   "dependencies": {
-    "@internal/fast-btr-eval-js": "workspace:*"
+    "@btjs/eval-js": "workspace:*"
   },
   "exports": {
     ".": {
