@@ -40,7 +40,7 @@ function SetupSignalAttribute(component: FASTElement, signalValue: string, node:
         signal.emit(value)
       } else if (typeof signal.value === 'number') {
         signal.emit(Number(value))
-      } else {
+      } else if (signal.value) {
         throw new Error(`TODO: Signal ${signalValue} is not a string or number`)
       }
     } else if (signal.value !== undefined) {

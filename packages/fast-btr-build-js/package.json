@@ -2,7 +2,8 @@
   "name": "@internal/fast-btr-build-js",
   "version": "1.0.0",
   "description": "FAST Build Time Rendering",
-  "main": "./dist/index.js",
+  "main": "./dist/process.js",
+  "types": "./src/process.ts",
   "type": "module",
   "scripts": {
     "build": "esbuild ./src/*.ts --outdir=./dist --sourcemap --format=esm --target=esnext --platform=node",

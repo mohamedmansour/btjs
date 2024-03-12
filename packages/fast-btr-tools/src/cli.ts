@@ -1,3 +1,4 @@
+import * as btr from '@internal/fast-btr-build-js'
 import esbuild from 'esbuild'
 import { AssetPair, copy } from 'esbuild-plugin-copy'
 import fs from 'node:fs'
@@ -7,6 +8,7 @@ interface Options {
   port: number
   out: string
   www?: string
+  client?: string
 }
 
 function buildBaseOptions(entryPoint: string, out: string): esbuild.BuildOptions {
@@ -98,6 +100,7 @@ export async function HandleWebBuild(entryPoint: string, options: Options) {
 export async function HandleNodeBuild(entryPoint: string, options: Options) {
   const config = buildNodeOptions(entryPoint, options.out)
   await esbuild.build(config).catch(() => process.exit(1))
+  btr.HandleBuild(options.client!, { port: 3001, useLinkCss: false })
 }
 
 function getFileSizeInBytes(path: string): number {

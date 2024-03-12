@@ -25,6 +25,7 @@ program
 program
   .command('build-server <entryPoint>')
   .description('Build the btr server')
+  .option('--client <client>', 'Client directory')
   .action((entryPoint, options) => HandleNodeBuild(entryPoint, options))
 
 program.commands.forEach(cmd => {
