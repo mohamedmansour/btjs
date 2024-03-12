@@ -37,7 +37,7 @@ pub struct BuildTimeRenderingStreamWhen {
 
 #[derive(Serialize, Deserialize)]
 pub struct BuildTimeRenderingTemplate {
-    pub style: String,
+    pub style: Option<String>,
     pub template: String,
 }
 

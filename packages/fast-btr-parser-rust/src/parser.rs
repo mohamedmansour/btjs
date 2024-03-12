@@ -1,6 +1,6 @@
-use crate::values::*;
 use crate::expression::*;
 use crate::protocol::*;
+use crate::values::*;
 use serde_json::Value;
 
 pub trait ServerHandler {
@@ -19,11 +19,15 @@ pub fn handle_btr(protocol: BuildTimeRenderingProtocol, state: Value, server_han
                     if let Value::Array(array) = value {
                         for item in array {
                             server_handler.write(&format!("<{}><template shadowrootmode=\"open\">", repeat_stream.template));
-                            if let Some(style) = protocol.templates.get(&repeat_stream.template).and_then(|t| Some(&t.style)) {
+                            if let Some(style) = protocol.templates.get(&repeat_stream.template).and_then(|t| t.style.as_ref()) {
                                 server_handler.write(&format!("<style>{}</style>", style));
                             }
                             let template = protocol.templates.get(&repeat_stream.template).unwrap().template.clone();
-                            server_handler.write(&format!("{}</template>{}</{}>", template, item, repeat_stream.template));
+                            let item_str = match item {
+                                Value::String(s) => s.clone(),
+                                _ => item.to_string(),
+                            };
+                            server_handler.write(&format!("{}</template>{}</{}>", template, item_str, repeat_stream.template));
                         }
                     }
                 }
@@ -55,8 +59,8 @@ pub fn handle_btr(protocol: BuildTimeRenderingProtocol, state: Value, server_han
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::cell::RefCell;
     use serde_json::json;
+    use std::cell::RefCell;
     use std::collections::HashMap;
 
     struct TestServerHandler {
@@ -102,9 +106,7 @@ mod tests {
         };
         let state = json!({});
         let mut server_handler = TestServerHandler::new();
-
         handle_btr(protocol, state, &mut server_handler);
-
         assert_eq!(server_handler.get_output(), "Hello, world!");
     }
 
@@ -131,14 +133,12 @@ mod tests {
             "a": "apple"
         });
         let mut server_handler = TestServerHandler::new();
-    
         handle_btr(protocol, state, &mut server_handler);
-    
         assert_eq!(server_handler.get_output(), "appleb");
     }
 
     #[test]
-    fn test_handle_btr_when() {
+    fn test_handle_btr_when_visible() {
         let protocol = BuildTimeRenderingProtocol {
             streams: vec![
                 BuildTimeRenderingStream::When(
@@ -153,9 +153,94 @@ mod tests {
             "a": 10
         });
         let mut server_handler = TestServerHandler::new();
-
         handle_btr(protocol, state, &mut server_handler);
-
         assert_eq!(server_handler.get_output(), "");
+    }
+
+    #[test]
+    fn test_handle_btr_when_hidden() {
+        let protocol = BuildTimeRenderingProtocol {
+            streams: vec![
+                BuildTimeRenderingStream::When(
+                    BuildTimeRenderingStreamWhen {
+                        value: "a > 10".to_string(),
+                    }
+                ),
+            ],
+            templates: HashMap::new(),
+        };
+        let state = json!({
+            "a": 10
+        });
+        let mut server_handler = TestServerHandler::new();
+        handle_btr(protocol, state, &mut server_handler);
+        assert_eq!(server_handler.get_output(), "style=\"display: none\"");
+    }
+
+    #[test]
+    fn test_handle_btr_repeat() {
+        let protocol = BuildTimeRenderingProtocol {
+            streams: vec![
+                BuildTimeRenderingStream::Repeat(
+                    BuildTimeRenderingStreamRepeat {
+                        template: "item".to_string(),
+                        value: "items".to_string(),
+                    }
+                ),
+            ],
+            templates: {
+                let mut map = HashMap::new();
+                map.insert(
+                    "item".to_string(),
+                    BuildTimeRenderingTemplate {
+                        template: "<div></div>".to_string(),
+                        style: None,
+                    },
+                );
+                map
+            },
+        };
+        let state = json!({
+            "items": ["item1", "item2", "item3"]
+        });
+        let mut server_handler = TestServerHandler::new();
+        handle_btr(protocol, state, &mut server_handler);
+        assert_eq!(
+            server_handler.get_output(),
+            "<item><template shadowrootmode=\"open\"><div></div></template>item1</item>\
+            <item><template shadowrootmode=\"open\"><div></div></template>item2</item>\
+            <item><template shadowrootmode=\"open\"><div></div></template>item3</item>"
+        );
+    }
+
+    #[test]
+    fn test_handle_btr_repeat_with_style() {
+        let protocol = BuildTimeRenderingProtocol {
+            streams: vec![
+                BuildTimeRenderingStream::Repeat(
+                    BuildTimeRenderingStreamRepeat {
+                        template: "item".to_string(),
+                        value: "items".to_string(),
+                    }
+                ),
+            ],
+            templates: {
+                let mut map = HashMap::new();
+                map.insert(
+                    "item".to_string(),
+                    BuildTimeRenderingTemplate {
+                        template: "<div></div>".to_string(),
+                        style: Some(":host\\{color:red;\\}".to_string()),
+                    },
+                );
+                map
+            },
+        };
+        let state = json!({
+            "items": ["item"]
+        });
+        let mut server_handler = TestServerHandler::new();
+        handle_btr(protocol, state, &mut server_handler);
+        assert_eq!(server_handler.get_output(), "<item><template shadowrootmode=\"open\"><style>:host\\{color:red;\\}</style><div></div></template>item</item>");
     }
 }
