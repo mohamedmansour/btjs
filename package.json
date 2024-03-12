@@ -5,13 +5,14 @@
   "scripts": {
     "build": "pnpm --stream -r --parallel run build",
     "test": "pnpm --stream -r --parallel run test",
-    "start": "pnpm --filter @example/shadowdom run start",
-    "serve": "pnpm --filter @example/btr-server-js run start ./apps/example-shadowdom-app/dist",
-    "btr": "pnpm --filter @internal/fast-btr-build-js run start ./apps/example-shadowdom-app/dist",
+    "start": "pnpm --filter @example/counter-app run start:dev",
+    "serve": "pnpm --filter @example/counter-app run start:btr",
+    "btr": "pnpm --filter @internal/fast-btr-build-js run start ./apps/example-counter-app/dist/client",
     "format": "dprint fmt --config dprint.json"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.6",
+    "commander": "^12.0.0",
     "dprint": "^0.45.0",
     "esbuild": "^0.20.1",
     "esbuild-plugin-copy": "^2.1.1",

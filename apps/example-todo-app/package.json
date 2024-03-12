@@ -1,5 +1,5 @@
 {
-  "name": "@example/counter-app",
+  "name": "@example/todo-app",
   "version": "1.0.0",
   "description": "",
   "main": "./dist/index.js",

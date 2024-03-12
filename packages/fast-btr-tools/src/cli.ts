@@ -3,41 +3,69 @@ import copy from 'esbuild-plugin-copy'
 import fs from 'node:fs'
 import path from 'node:path'
 
-function buildOptions(entryPoint: string): esbuild.BuildOptions {
+interface Options {
+  port: number
+  out: string
+  www?: string
+}
+
+function buildBaseOptions(entryPoint: string, out: string): esbuild.BuildOptions {
   return {
     entryPoints: [entryPoint],
-    bundle: true,
     sourcemap: true,
     format: 'esm',
     target: 'esnext',
-    outdir: './dist',
+    outdir: out,
+  }
+}
+
+function buildWebOptions(entryPoint: string, out: string, www?: string): esbuild.BuildOptions {
+  const config = buildBaseOptions(entryPoint, out)
+  const entryPointDir = path.dirname(entryPoint)
+  const assets: copy.AssetPair[] = [
+    {
+      from: [`${entryPointDir}/**/*.html`, `${entryPointDir}/**/*.css`],
+      to: [out],
+    },
+  ]
+
+  if (www) {
+    assets.push({
+      from: `${www}/**/*`,
+      to: [out],
+    })
+  }
+
+  return {
+    ...config,
+    bundle: true,
+    outdir: out,
     plugins: [
       copy({
+        assets,
         resolveFrom: 'cwd',
-        assets: [
-          {
-            from: ['./www/*'],
-            to: ['./dist'],
-          },
-          {
-            from: ['./src/**/*.html', './src/**/*.css'],
-            to: ['./dist'],
-          },
-        ],
       }),
     ],
   }
 }
 
-export async function HandleServe(entryPoint: string, servingPort: number) {
-  const config = buildOptions(entryPoint)
+function buildNodeOptions(entryPoint: string, out: string): esbuild.BuildOptions {
+  const config = buildBaseOptions(entryPoint, out)
+  return {
+    ...config,
+    platform: 'node',
+  }
+}
+
+export async function HandleServe(entryPoint: string, options: Options) {
+  const config = buildWebOptions(entryPoint, options.out, options.www)
   const context = await esbuild.context(config)
 
   await context.watch()
 
   const { port } = await context.serve({
-    servedir: './dist',
-    port: servingPort,
+    servedir: options.out,
+    port: options.port,
     onRequest: (args) => {
       console.log(`[request] ${args.path}`)
     },
@@ -46,8 +74,8 @@ export async function HandleServe(entryPoint: string, servingPort: number) {
   console.log(`[  ready] http://localhost:${port}/`)
 }
 
-export async function HandleBuild(entryPoint: string) {
-  const config = buildOptions(entryPoint)
+export async function HandleWebBuild(entryPoint: string, options: Options) {
+  const config = buildWebOptions(entryPoint, options.out, options.www)
   config.minify = true
   config.metafile = true
 
@@ -65,6 +93,11 @@ export async function HandleBuild(entryPoint: string) {
       })
     }
   }
+}
+
+export async function HandleNodeBuild(entryPoint: string, options: Options) {
+  const config = buildNodeOptions(entryPoint, options.out)
+  await esbuild.build(config).catch(() => process.exit(1))
 }
 
 function getFileSizeInBytes(path: string): number {

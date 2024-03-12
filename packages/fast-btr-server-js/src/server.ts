@@ -27,7 +27,7 @@ export class BTRServer {
 
   public addHandler(method: 'get' | 'post', path: string, protocolFile: string, state: Object) {
     if (!existsSync(protocolFile)) {
-      throw new Error('No BTR protocol file found')
+      throw new Error(`No BTR protocol file found: "${protocolFile}"`)
     }
 
     const handlerKey = `${method}:${path}`

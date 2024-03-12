@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { Command } from 'commander'
-import { HandleBuild, HandleServe } from './cli.js'
+import { Command, Option } from 'commander'
+import { HandleNodeBuild, HandleServe, HandleWebBuild } from './cli.js'
 
 const program = new Command()
 program
@@ -13,11 +13,22 @@ program
   .command('dev-server <entryPoint>')
   .description('Start the development server')
   .option('-p, --port <port>', 'Port to serve the app', (value) => parseInt(value, 10), 3000)
-  .action((entryPoint, options) => HandleServe(entryPoint, options.port))
+  .option('--www <www>', 'Public directory to serve')
+  .action((entryPoint, options) => HandleServe(entryPoint, options))
 
 program
-  .command('build <entryPoint>')
+  .command('build-client <entryPoint>')
   .description('Build the app')
-  .action((entryPoint) => HandleBuild(entryPoint))
+  .option('--www <www>', 'Public directory to serve')
+  .action((entryPoint, options) => HandleWebBuild(entryPoint, options))
+
+program
+  .command('build-server <entryPoint>')
+  .description('Build the btr server')
+  .action((entryPoint, options) => HandleNodeBuild(entryPoint, options))
+
+program.commands.forEach(cmd => {
+  cmd.addOption(new Option('--out <out>', 'Output directory'))
+})
 
 program.parse(process.argv)

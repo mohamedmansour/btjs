@@ -1,9 +1,8 @@
 import { BTRServer, StateFile } from '@internal/fast-btr-server-js'
-import { join, resolve } from 'node:path'
+import { Command } from 'commander'
+import { join } from 'node:path'
 
 export function HandleServe(appPath: string, port: number) {
-  appPath = resolve(process.env['INIT_CWD'] || process.cwd(), appPath)
-
   const server = new BTRServer(appPath, port)
   const state = new StateFile(appPath, {
     items: [],
@@ -23,3 +22,12 @@ export function HandleServe(appPath: string, port: number) {
   // Start the server.
   server.start()
 }
+
+const program = new Command()
+program
+  .name('BTR Todo App')
+  .version('0.0.1')
+  .option('-p, --port <port>', 'Port to serve the app', (value) => parseInt(value, 10), 3000)
+  .arguments('<path>')
+  .action((path, options) => HandleServe(path, options.port))
+program.parse(process.argv)
