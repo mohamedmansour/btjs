@@ -5,10 +5,13 @@
   "main": "./dist/index.js",
   "type": "module",
   "scripts": {
-    "build": "node build.js",
-    "start": "node start.js"
+    "build": "btr build ./src/index.ts",
+    "start": "btr dev-server ./src/index.ts"
   },
   "dependencies": {
     "@internal/fast-element": "workspace:*"
+  },
+  "devDependencies": {
+    "@internal/fast-btr-tools": "workspace:*"
   }
 }
