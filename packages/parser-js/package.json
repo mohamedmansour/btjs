@@ -1,10 +1,11 @@
 {
   "name": "@btjs/parser-js",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Build time rendering parser",
   "main": "./dist/index.js",
   "types": "./src/index.ts",
   "type": "module",
+  "files": ["dist"],
   "scripts": {
     "build": "esbuild ./src/index.ts --bundle --outdir=./dist --sourcemap --format=esm --target=esnext"
   },

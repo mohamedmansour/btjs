@@ -1,10 +1,11 @@
 {
   "name": "@btjs/server-express",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Express server for BTJS",
   "main": "./dist/index.js",
   "types": "./src/index.ts",
   "type": "module",
+  "files": ["dist"],
   "scripts": {
     "build": "esbuild ./src/*.ts --outdir=./dist --sourcemap --format=esm --target=esnext --platform=node"
   },

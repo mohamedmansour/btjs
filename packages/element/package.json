@@ -1,9 +1,10 @@
 {
   "name": "@btjs/element",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "The HTML Element for the BTJS Web Components Framework",
   "main": "./src/index.ts",
   "type": "module",
+  "files": ["dist"],
   "scripts": {
     "build": "esbuild ./src/index.ts --bundle --minify --outdir=./dist --sourcemap --format=esm --target=esnext",
     "serve": "esbuild --serve index.ts --bundle --servedir=."
