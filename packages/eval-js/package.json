@@ -1,7 +1,7 @@
 {
   "name": "@btjs/eval-js",
   "version": "1.0.0",
-  "description": "Internal Safe Eval for BRT",
+  "description": "Bindings for evalulating expressions",
   "main": "./dist/index.js",
   "types": "./src/index.ts",
   "type": "module",

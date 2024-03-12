@@ -1,7 +1,7 @@
 {
   "name": "@btjs/tools",
   "version": "1.0.0",
-  "description": "Internal tooling for BTR for build / run",
+  "description": "BTJS Tools",
   "main": "./dist/index.js",
   "type": "module",
   "scripts": {

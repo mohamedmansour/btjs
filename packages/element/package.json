@@ -1,7 +1,7 @@
 {
   "name": "@btjs/element",
   "version": "1.0.0",
-  "description": "",
+  "description": "The HTML Element for the BTJS Web Components Framework",
   "main": "./src/index.ts",
   "type": "module",
   "scripts": {

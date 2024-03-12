@@ -1,5 +1,6 @@
 {
   "name": "@btjs/parser-rust",
+  "description": "Rust parser for the BTJS project",
   "version": "1.0.0",
   "scripts": {
     "build": "cargo build --release",

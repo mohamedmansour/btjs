@@ -1,7 +1,7 @@
 {
   "name": "@btjs/server-express",
   "version": "1.0.0",
-  "description": "Example Counter App",
+  "description": "Express server for BTJS",
   "main": "./dist/index.js",
   "types": "./src/index.ts",
   "type": "module",
