@@ -300,6 +300,22 @@ mod tests {
                 expected: true,
             },
             TestCaseEval {
+                expression: "name.first == \"John\"",
+                expected: true,
+            },
+            TestCaseEval {
+                expression: "name.first == 'John'",
+                expected: true,
+            },
+            TestCaseEval {
+                expression: "name.first == 'Johnny'",
+                expected: false,
+            },
+            TestCaseEval {
+                expression: "name.first == \"Johnny\"",
+                expected: false,
+            },
+            TestCaseEval {
                 expression: "name.first &&",
                 expected: false,
             },

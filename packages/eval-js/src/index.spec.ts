@@ -1,5 +1,5 @@
 import assert from 'assert'
-import { parseExpression, safeEvaluateExpression } from './index.js'
+import { parseExpression, safeEvaluateExpression } from './index'
 
 describe('safeEvaluateExpression', function() {
   it('should parse expressions correctly', function() {
@@ -14,6 +14,7 @@ describe('safeEvaluateExpression', function() {
         expected: ['o', '>', 'p', '&&', 'q', '<=', 'r', '||', 's', '==', 't'],
       },
       { expression: 'foo.bar && bar', expected: ['foo.bar', '&&', 'bar'] },
+      { expression: 'item.type == "movie"', expected: ['item.type', '==', '"movie"'] },
     ]
 
     for (const testCase of testCases) {
@@ -49,6 +50,10 @@ describe('safeEvaluateExpression', function() {
       { expression: '!is_student || true', expected: true },
       { expression: '"a" == "a"', expected: true },
       { expression: 'favorite.categories.music.length > 0', expected: true },
+      { expression: 'name.first == "John"', expected: true },
+      { expression: "name.first == 'John'", expected: true },
+      { expression: "name.first == 'Johnny'", expected: false },
+      { expression: 'name.first == "Johnny"', expected: false },
       { expression: 'name.first &&', expected: false },
       { expression: 'name.middle', expected: false },
       { expression: 'name.first && (age == 31)', expected: false },
