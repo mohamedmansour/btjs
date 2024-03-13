@@ -1,7 +1,7 @@
 import esbuild from 'esbuild'
-import { AssetPair, copy } from 'esbuild-plugin-copy'
 import fs from 'node:fs'
 import path from 'node:path'
+import { CopyAsset, copyPlugin } from './copy-plugin.js'
 import { HandleBuild } from './process.js'
 
 interface Options {
@@ -24,17 +24,19 @@ function buildBaseOptions(entryPoint: string, out: string): esbuild.BuildOptions
 function buildWebOptions(entryPoint: string, out: string, www?: string): esbuild.BuildOptions {
   const config = buildBaseOptions(entryPoint, out)
   const entryPointDir = path.dirname(entryPoint)
-  const assets: AssetPair[] = [
+  const assets: CopyAsset[] = [
     {
       from: [`${entryPointDir}/**/*.html`, `${entryPointDir}/**/*.css`],
       to: [out],
+      flatten: true,
     },
   ]
 
   if (www) {
     assets.push({
-      from: `${www}/**/*`,
+      from: [`${www}/**/*`],
       to: [out],
+      flatten: true,
     })
   }
 
@@ -43,10 +45,7 @@ function buildWebOptions(entryPoint: string, out: string, www?: string): esbuild
     bundle: true,
     outdir: out,
     plugins: [
-      copy({
-        assets,
-        resolveFrom: 'cwd',
-      }),
+      copyPlugin(assets),
     ],
   }
 }
