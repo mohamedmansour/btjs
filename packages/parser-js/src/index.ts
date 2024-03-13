@@ -22,9 +22,16 @@ export function handleBTR(protocol: BuildTimeRenderingProtocol, state: Object, s
             if (protocol.templates[stream.template].style) {
               serverHandler.write(`<style>${protocol.templates[stream.template].style}</style>`)
             }
-            serverHandler.write(
-              `${protocol.templates[stream.template].template}</template>${item}</${stream.template}>`,
-            )
+            serverHandler.write(`${protocol.templates[stream.template].template}</template>`)
+            const itemType = typeof item
+            if (itemType === 'string' || itemType === 'number' || itemType === 'boolean' || Array.isArray(item)) {
+              serverHandler.write(String(item))
+            } else if (itemType === 'object') {
+              Object.keys(item).forEach((key) => {
+                serverHandler.write(`<span slot="${key}">${item[key]}</span>`)
+              })
+            }
+            serverHandler.write(`</${stream.template}>`)
           })
         }
         break

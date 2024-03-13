@@ -107,26 +107,40 @@ function SetupRepeatAttribute(component: HTMLElement, repeatValue: string, node:
     throw new Error(`Signal ${repeatValue} not found`)
   }
 
-  // Store existing children as items to the repeat signal. The assumption here is that the children
-  // can only have strings as their content for now. This could be improved to support objects with slots.
+  // Store existing children as items to the repeat signal. When the child has slots
+  // the slots are stored as objects with the slot name as the key and the slot value as the value.
   const items: any = []
   for (let i = 0; i < node.children.length; i++) {
     const child = node.children[i]
-    items.push(child.textContent?.trim())
+    const slots = child.querySelectorAll<HTMLElement>('[slot]')
+    if (slots.length > 0) {
+      const slotObject: { [key: string]: string } = {}
+      slots.forEach((slot: HTMLElement) => {
+        const slotName = slot.slot!
+        const slotValue = slot.textContent?.trim()
+        if (slotValue) {
+          slotObject[slotName] = slotValue
+        }
+      })
+      items.push(slotObject)
+    } else {
+      items.push(child.textContent?.trim())
+    }
   }
 
   const componentTag = node.getAttribute(`w-component`)
   signal.emit(items)
-  signal.on((values: string[]) => {
+  signal.on((values: any[]) => {
     // Update some sort of key-based reconcilation strategy. To assign a unique key to each node and using
     // these keys to match nodes between the old and new state.
     node.innerHTML = ''
     const fragment = document.createDocumentFragment()
     values.forEach((value) => {
       const newNode = document.createElement(componentTag!)
-      if (typeof value === 'string') {
-        newNode.appendChild(document.createTextNode(value))
-      } else if (typeof value === 'object') {
+      const valueType = typeof value
+      if (valueType === 'string' || valueType === 'number' || valueType === 'boolean' || Array.isArray(value)) {
+        newNode.appendChild(document.createTextNode(String(value)))
+      } else if (valueType === 'object') {
         Object.keys(value).forEach((key) => {
           const slot = document.createElement('span')
           slot.textContent = value[key]
@@ -134,7 +148,6 @@ function SetupRepeatAttribute(component: HTMLElement, repeatValue: string, node:
           newNode.appendChild(slot)
         })
       }
-      // TODO: Add support for objects with slots.
       fragment.appendChild(newNode)
     })
     node.appendChild(fragment)

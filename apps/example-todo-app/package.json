@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "clean": "rimraf -rf dist",
+    "tsc": "tsc --noEmit",
     "build": "npm run clean && npm run build:client && npm run build:server",
     "build:client": "btr build-client ./client/src/index.ts --www ./client/www --out ./dist/client",
     "build:server": "btr build-server ./server/server.ts --out ./dist/server --client ./dist/client",

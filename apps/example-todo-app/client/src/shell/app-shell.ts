@@ -1,12 +1,17 @@
 import { FASTElement, customElement, observer } from '@btjs/element'
 
+interface Item {
+  id: number
+  name: string
+}
+
 @customElement({ name: 'app-shell' })
 export class AppElement extends FASTElement {
   @observer
   toast: string | null = null
 
   @observer
-  items: string[] = []
+  items: Item[] = []
 
   private toastId = 0
   private itemId = 0
@@ -17,7 +22,7 @@ export class AppElement extends FASTElement {
     this.addEventListener('item-removed', (event: Event) => {
       const customEvent = event as CustomEvent<string>
       this.setToast(`${customEvent.detail} removed`)
-      this.setItems(this.items.filter((item) => item !== customEvent.detail))
+      this.setItems(this.items.filter((item) => item.name !== customEvent.detail))
     })
 
     this.addEventListener('item-renamed', (event: any) => {
@@ -28,7 +33,10 @@ export class AppElement extends FASTElement {
   }
 
   onClick(_e: Event) {
-    this.setItems([...this.items, `Item ${++this.itemId}`])
+    this.setItems([...this.items, {
+      id: this.itemId,
+      name: `Item ${++this.itemId}`,
+    }])
     this.setToast(`Item ${this.itemId} added`)
   }
 
@@ -37,7 +45,7 @@ export class AppElement extends FASTElement {
     this.setToast('Items cleared')
   }
 
-  setItems(items: string[]) {
+  setItems(items: Item[]) {
     this.items = items
     fetch('/api/items', {
       method: 'POST',

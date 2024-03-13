@@ -22,12 +22,38 @@ pub fn handle_btr(protocol: BuildTimeRenderingProtocol, state: Value, server_han
                             if let Some(style) = protocol.templates.get(&repeat_stream.template).and_then(|t| t.style.as_ref()) {
                                 server_handler.write(&format!("<style>{}</style>", style));
                             }
+
                             let template = protocol.templates.get(&repeat_stream.template).unwrap().template.clone();
-                            let item_str = match item {
-                                Value::String(s) => s.clone(),
-                                _ => item.to_string(),
-                            };
-                            server_handler.write(&format!("{}</template>{}</{}>", template, item_str, repeat_stream.template));
+                            server_handler.write(&format!("{}</template>", template));
+
+                            match item {
+                                Value::String(s) => {
+                                    server_handler.write(&s.to_string());
+                                },
+                                Value::Number(n) => {
+                                    server_handler.write(&n.to_string());
+                                },
+                                Value::Bool(b) => {
+                                    server_handler.write(&b.to_string());
+                                },
+                                Value::Array(arr) => {
+                                    let s: String = arr.iter().map(|v| v.to_string()).collect::<Vec<String>>().join(",");
+                                    server_handler.write(&s);
+                                },
+                                Value::Object(map) => {
+                                    for (key, value) in map {
+                                        let value_str = match value {
+                                            Value::String(s) => s,
+                                            Value::Array(arr) => arr.iter().map(|v| v.to_string()).collect::<Vec<String>>().join(","),
+                                            _ => value.to_string(),
+                                        };
+                                        server_handler.write(&format!("<span slot=\"{}\">{}</span>", key, value_str));
+                                    }
+                                },
+                                _ => {}
+                            }
+
+                            server_handler.write(&format!("</{}>", repeat_stream.template));
                         }
                     }
                 }
@@ -210,6 +236,55 @@ mod tests {
             "<item><template shadowrootmode=\"open\"><div></div></template>item1</item>\
             <item><template shadowrootmode=\"open\"><div></div></template>item2</item>\
             <item><template shadowrootmode=\"open\"><div></div></template>item3</item>"
+        );
+    }
+
+    #[test]
+    fn test_handle_btr_repeat_with_objects() {
+        let protocol = BuildTimeRenderingProtocol {
+            streams: vec![
+                BuildTimeRenderingStream::Repeat(
+                    BuildTimeRenderingStreamRepeat {
+                        template: "item".to_string(),
+                        value: "items".to_string(),
+                    }
+                ),
+            ],
+            templates: {
+                let mut map = HashMap::new();
+                map.insert(
+                    "item".to_string(),
+                    BuildTimeRenderingTemplate {
+                        template: "<div></div>".to_string(),
+                        style: None,
+                    },
+                );
+                map
+            },
+        };
+        let state = json!({
+            "items": [
+                {
+                    "color": "red",
+                    "size": "large"
+                },
+                {
+                    "color": "blue",
+                    "quantities": 123
+                },
+                {
+                    "authors": ["a", 1],
+                    "color": "teal",
+                }
+            ]
+        });
+        let mut server_handler = TestServerHandler::new();
+        handle_btr(protocol, state, &mut server_handler);
+        assert_eq!(
+            server_handler.get_output(),
+            "<item><template shadowrootmode=\"open\"><div></div></template><span slot=\"color\">red</span><span slot=\"size\">large</span></item>\
+            <item><template shadowrootmode=\"open\"><div></div></template><span slot=\"color\">blue</span><span slot=\"quantities\">123</span></item>\
+            <item><template shadowrootmode=\"open\"><div></div></template><span slot=\"authors\">\"a\",1</span><span slot=\"color\">teal</span></item>"
         );
     }
 
