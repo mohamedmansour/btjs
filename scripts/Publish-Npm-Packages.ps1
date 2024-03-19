@@ -8,24 +8,29 @@ foreach ($dir in $directories) {
         Set-Location -Path $dir.FullName -ErrorAction Stop
         Write-Host "Checking package in directory: $($dir.Name)"
         
-        # Get the package name and version from package.json
-        $packageJson = Get-Content -Path "./package.json" | ConvertFrom-Json
-        $packageName = $packageJson.name
-        $localVersion = $packageJson.version
+        # Check if package.json exists
+        if (Test-Path "./package.json") {
+            # Get the package name and version from package.json
+            $packageJson = Get-Content -Path "./package.json" | ConvertFrom-Json
+            $packageName = $packageJson.name
+            $localVersion = $packageJson.version
 
-        # Get the npm version
-        $npmVersion = ""
-        try {
-            $npmVersion = (npm show $packageName version) -replace "`n", ""
-        } catch {
-            Write-Host "Package $packageName not found on npm"
-        }
+            # Get the npm version
+            $npmVersion = ""
+            try {
+                $npmVersion = (npm show $packageName version) -replace "`n", ""
+            } catch {
+                Write-Host "Package $packageName not found on npm"
+            }
 
-        if ($localVersion -ne $npmVersion) {
-            Write-Host "Publishing package: $packageName"
-            pnpm publish --access public
+            if ($localVersion -ne $npmVersion) {
+                Write-Host "Publishing package: $packageName"
+                pnpm publish --access public
+            } else {
+                Write-Host "Skipping package: $packageName, version has not changed"
+            }
         } else {
-            Write-Host "Skipping package: $packageName, version has not changed"
+            Write-Host "Skipping directory: $($dir.Name), package.json not found"
         }
 
         Set-Location -Path $rootPath -ErrorAction Stop
