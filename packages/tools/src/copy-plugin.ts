@@ -16,7 +16,7 @@ export function copyPlugin(copyPaths: CopyAsset[], plugin?: BTRPlugin): esbuild.
     name: 'copy-plugin',
     setup(build) {
       build.onEnd(() => {
-        const copyEndPlugin = plugin?.onCopyEnd();
+        const copyEndPlugin = plugin?.onCopyEnd()
         const copiedFiles = new Set<string>()
         copyPaths.forEach(({ from, to, flatten }) => {
           from.forEach((fromPath) => {

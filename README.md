@@ -1,34 +1,41 @@
 ## About
+
 ### Node.js Independence
- - Unlike SSR, which relies on Node.js for server-side rendering, BTJS breaks free from this dependency. No Node.js is required, simplifying deployment and reducing runtime overhead. 
+
+- Unlike SSR, which relies on Node.js for server-side rendering, BTJS breaks free from this dependency. No Node.js is required, simplifying deployment and reducing runtime overhead.
 - BTJS is language agnostic, and simple protocol. We have built a Rust, and Node.js BTJS servers.
 
 ### CSS and HTML Separation
- - BTJS takes a bold step by decoupling CSS and HTML from JavaScript. In SSR, these often end up bundled together, leading to larger payloads.
- - With BTJS, CSS remains in its own realm, and HTML is no longer entangled within JavaScript files. This separation promotes cleaner code and easier maintenance.
+
+- BTJS takes a bold step by decoupling CSS and HTML from JavaScript. In SSR, these often end up bundled together, leading to larger payloads.
+- With BTJS, CSS remains in its own realm, and HTML is no longer entangled within JavaScript files. This separation promotes cleaner code and easier maintenance.
 - The Dev doesn't still programs in CSR , but the build-step will make it SSR (BTJS)
 
 ### Islands: The New Paradigm
- - BTJS introduces the concept of Islands, self-contained functional units. .
- - Islands are like mini-applications, isolated from one another as Web Components. They can be developed independently, promoting modularity and reusability.
+
+- BTJS introduces the concept of Islands, self-contained functional units. .
+- Islands are like mini-applications, isolated from one another as Web Components. They can be developed independently, promoting modularity and reusability.
 
 ### BTJS Element for Island Creation
- - BTJS leverages BTJS Web Component Element, a lightweight library (2KB) for building web components. Developers can create Islands using BTJS Element’s declarative syntax. (`f-when`, `f-repeat`, `f-ref`, `f-on`), and each Web Component data binds to it via `@attr`, `@observable`.
- - By treating JavaScript as a collection of Islands, we achieve a more efficient architecture.
+
+- BTJS leverages BTJS Web Component Element, a lightweight library (2KB) for building web components. Developers can create Islands using BTJS Element’s declarative syntax. (`f-when`, `f-repeat`, `f-ref`, `f-on`), and each Web Component data binds to it via `@attr`, `@observable`.
+- By treating JavaScript as a collection of Islands, we achieve a more efficient architecture.
 
 ### Faster First Contentful Paint (FCP/LCP)
- - The magic of BTJS lies in its ability to shift work away from the browser and into the build step. This means that JavaScript execution is not required for FCP/LCP at all.
- - Users experience fasterr load times, as critical rendering tasks are handled during build time.
- - JavaScript will no longer contain templates or styles, just logic for making it interactive.
+
+- The magic of BTJS lies in its ability to shift work away from the browser and into the build step. This means that JavaScript execution is not required for FCP/LCP at all.
+- Users experience fasterr load times, as critical rendering tasks are handled during build time.
+- JavaScript will no longer contain templates or styles, just logic for making it interactive.
 
 ### SEO-Friendly Static Generation
- - BTJS statically generates Islands, resulting in clean, SEO-friendly HTML. 
- - SSR often generates content dynamically, which can hinder SEO efforts.
+
+- BTJS statically generates Islands, resulting in clean, SEO-friendly HTML.
+- SSR often generates content dynamically, which can hinder SEO efforts.
 
 ### Server-Side Streaming with Precision
- - BTJS enables server-side streaming, but with a twist. Each chunk of content is meticulously crafted to meet streaming requirements.
- - Progressive rendering ensures a smooth user experience, even on slower connections.
 
+- BTJS enables server-side streaming, but with a twist. Each chunk of content is meticulously crafted to meet streaming requirements.
+- Progressive rendering ensures a smooth user experience, even on slower connections.
 
 ## Declarative Bindings
 

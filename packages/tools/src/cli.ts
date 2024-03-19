@@ -1,10 +1,10 @@
 import esbuild from 'esbuild'
 import fs from 'node:fs'
 import path from 'node:path'
-import { CopyAsset, copyPlugin } from './copy-plugin.js'
-import { HandleBuild } from './process.js'
-import { BTRPlugin } from './plugin-interface.js'
 import { pathToFileURL } from 'node:url'
+import { CopyAsset, copyPlugin } from './copy-plugin.js'
+import { BTRPlugin } from './plugin-interface.js'
+import { HandleBuild } from './process.js'
 
 interface Options {
   port: number
@@ -22,8 +22,8 @@ function buildBaseOptions(entryPoint: string, out: string): esbuild.BuildOptions
     target: 'esnext',
     outdir: out,
     loader: {
-      '.png': 'dataurl'
-    }
+      '.png': 'dataurl',
+    },
   }
 }
 
@@ -48,9 +48,9 @@ async function buildWebOptions(entryPoint: string, options: Options): Promise<es
 
   let customPlugin: BTRPlugin | undefined
   if (options.plugin) {
-    const pluginPathAbsolute = path.resolve(process.env['INIT_CWD'] || process.cwd(), options.plugin);
-    const pluginPathURL = pathToFileURL(pluginPathAbsolute).href;
-    const plugin = await import(pluginPathURL);
+    const pluginPathAbsolute = path.resolve(process.env['INIT_CWD'] || process.cwd(), options.plugin)
+    const pluginPathURL = pathToFileURL(pluginPathAbsolute).href
+    const plugin = await import(pluginPathURL)
     customPlugin = plugin.default()
   }
 
