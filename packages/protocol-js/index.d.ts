@@ -5,6 +5,12 @@ export interface BuildTimeRenderingStreamRepeat {
 }
 
 export interface BuildTimeRenderingStreamRaw {
+  type: 'attribute'
+  name: string
+  value: string
+}
+
+export interface BuildTimeRenderingStreamRaw {
   type: 'raw'
   value: string
 }
@@ -21,6 +27,7 @@ export interface BuildTimeRenderingStreamWhen {
 }
 
 export type BuildTimeRenderingStream =
+  | BuildTimeRenderingStreamAttribute
   | BuildTimeRenderingStreamRaw
   | BuildTimeRenderingStreamRepeat
   | BuildTimeRenderingStreamSignal

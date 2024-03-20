@@ -11,6 +11,21 @@ pub trait ServerHandler {
 pub fn handle_btr(protocol: BuildTimeRenderingProtocol, state: Value, server_handler: &mut dyn ServerHandler) {
     for stream in protocol.streams {
         match stream {
+            BuildTimeRenderingStream::Attribute(attribute_stream) => {
+                let value = find_value_by_dotted_path(&attribute_stream.value, &state);
+                let value_string = match value {
+                    Some(Value::String(s)) => s.clone(),
+                    Some(value) => value.to_string(),
+                    None => {
+                        if let Some(default_value) = attribute_stream.default_value.as_ref() {
+                            default_value.clone()
+                        } else {
+                            String::new()
+                        }
+                    }
+                };
+                server_handler.write(&format!("{}={}", attribute_stream.name, value_string));
+            }
             BuildTimeRenderingStream::Raw(raw_stream) => {
                 server_handler.write(&raw_stream.value);
             }
@@ -161,6 +176,50 @@ mod tests {
         let mut server_handler = TestServerHandler::new();
         handle_btr(protocol, state, &mut server_handler);
         assert_eq!(server_handler.get_output(), "appleb");
+    }
+
+    #[test]
+    fn test_handle_btr_attribute() {
+        let protocol = BuildTimeRenderingProtocol {
+            streams: vec![
+                BuildTimeRenderingStream::Attribute(
+                    BuildTimeRenderingStreamAttribute {
+                        value: "fruit".to_string(),
+                        name: "href".to_string(),
+                        default_value: None,
+                    }
+                )
+            ],
+            templates: HashMap::new(),
+        };
+        let state = json!({
+            "fruit": "apple"
+        });
+        let mut server_handler = TestServerHandler::new();
+        handle_btr(protocol, state, &mut server_handler);
+        assert_eq!(server_handler.get_output(), "href=apple");
+    }
+    
+    #[test]
+    fn test_handle_btr_attribute_default() {
+        let protocol = BuildTimeRenderingProtocol {
+            streams: vec![
+                BuildTimeRenderingStream::Attribute(
+                    BuildTimeRenderingStreamAttribute {
+                        value: "fruit".to_string(),
+                        name: "href".to_string(),
+                        default_value: Some("pineapple".to_string()),
+                    }
+                )
+            ],
+            templates: HashMap::new(),
+        };
+        let state = json!({
+            "liquid": "water"
+        });
+        let mut server_handler = TestServerHandler::new();
+        handle_btr(protocol, state, &mut server_handler);
+        assert_eq!(server_handler.get_output(), "href=pineapple");
     }
 
     #[test]

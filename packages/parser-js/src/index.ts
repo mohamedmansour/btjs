@@ -10,6 +10,15 @@ export interface ServerHandler {
 export function handleBTR(protocol: BuildTimeRenderingProtocol, state: Object, serverHandler: ServerHandler) {
   protocol.streams.forEach(stream => {
     switch (stream.type) {
+      case 'attribute': {
+        const value = findValueByDottedPath(stream.value, state)
+        if (value !== undefined) {
+          serverHandler.write(`${stream.name}="${value}"`)
+        } else if (stream.defaultValue !== undefined) {
+          serverHandler.write(`${stream.name}="${stream.defaultValue}"`)
+        }
+        break
+      }
       case 'raw': {
         serverHandler.write(stream.value)
         break

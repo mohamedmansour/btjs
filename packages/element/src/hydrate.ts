@@ -13,7 +13,12 @@ declare global {
 
 const PREFIX = 'f-'
 
-function SetupSignalAttribute(component: FASTElement, signalValue: string, node: Element) {
+function BindSignalAttribute(
+  component: FASTElement,
+  signalValue: string,
+  node: Element,
+  callback: (nodeToBind: Element, value: string) => void,
+) {
   const signalValueSplits = signalValue.split('.')
   const firstPart = signalValueSplits[0]
   const signal = component[`$${firstPart}`]
@@ -51,12 +56,18 @@ function SetupSignalAttribute(component: FASTElement, signalValue: string, node:
       }
     } else if (signal.value !== undefined) {
       // Update display for the initial value of the signal.
-      owningNode.textContent = signal.value
+      callback(owningNode, signal.value)
     }
   }
 
   signal.on((_value: string | number) => {
-    owningNode.textContent = findValueByDottedPath(signalValue, component)
+    callback(owningNode, findValueByDottedPath(signalValue, component))
+  })
+}
+
+function SetupSignalAttribute(component: FASTElement, signalValue: string, node: Element) {
+  BindSignalAttribute(component, signalValue, node, (nodeToBind, value) => {
+    nodeToBind.textContent = value
   })
 }
 
@@ -66,6 +77,12 @@ function SetupEventAttribute(component: FASTElement, eventValue: string, node: E
   }
   node.addEventListener(eventName, (e) => {
     component[eventValue](e)
+  })
+}
+
+function SetupAttribute(component: FASTElement, attributeValue: string, node: Element, attributeName: string) {
+  BindSignalAttribute(component, attributeValue, node, (nodeToBind, value) => {
+    nodeToBind.setAttribute(attributeName, value)
   })
 }
 
@@ -181,7 +198,7 @@ function SetupAttributes(component: FASTElement, node: Element) {
             break
           }
 
-          console.warn(`Attribute ${key} not found`)
+          SetupAttribute(component, attr.value, node, key)
           break
         }
       }

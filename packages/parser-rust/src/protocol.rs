@@ -6,10 +6,19 @@ use std::collections::HashMap;
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum BuildTimeRenderingStream {
+    Attribute(BuildTimeRenderingStreamAttribute),
     Raw(BuildTimeRenderingStreamRaw),
     Repeat(BuildTimeRenderingStreamRepeat),
     Signal(BuildTimeRenderingStreamSignal),
     When(BuildTimeRenderingStreamWhen),
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct BuildTimeRenderingStreamAttribute {
+    pub value: String,
+    pub name: String,
+    #[serde(rename = "defaultValue")]
+    pub default_value: Option<String>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]

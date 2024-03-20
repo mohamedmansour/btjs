@@ -64,7 +64,7 @@ export function HandleBuild(appPath: string, options: BuildOptions) {
       })
     })
 
-    await page.exposeFunction('writeStreamResponse', (type: string, value: string, extra: string) => {
+    await page.exposeFunction('writeStreamResponse', (type: string, value: string, extra: string, detail: string) => {
       if (type === 'repeat') {
         streamResponses.push({ type, value, template: extra })
       } else if (type === 'signal') {
@@ -73,6 +73,8 @@ export function HandleBuild(appPath: string, options: BuildOptions) {
         streamResponses.push({ type, value })
       } else if (type === 'when') {
         streamResponses.push({ type, value })
+      } else if (type === 'attribute') {
+        streamResponses.push({ type, value, name: extra, defaultValue: detail })
       } else {
         console.error('Unknown stream type:', type)
       }

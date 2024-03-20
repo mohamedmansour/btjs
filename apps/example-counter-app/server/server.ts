@@ -6,6 +6,7 @@ export function HandleServe(appPath: string, port: number) {
   const server = new BTRServer(appPath, port)
   const state = new StateFile(appPath, {
     counter: 0,
+    url: 'https://picsum.photos/id/0/100/35',
   })
 
   // Create API endpoint to handle POST requests.

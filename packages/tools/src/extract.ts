@@ -3,7 +3,7 @@ import type { BuildTimeRenderingStreamTemplateRecords } from '@btjs/protocol-js'
 declare global {
   interface Window {
     readFile: (path: string) => Promise<string[]>
-    writeStreamResponse: (type: string, value: string, extra?: string) => void
+    writeStreamResponse: (type: string, value: string, extra?: string, detail?: string) => void
     writeTemplates: (value: string) => void
     writePreload: (type: string, value: string[], lines: string[]) => Promise<string[]>
   }
@@ -57,81 +57,77 @@ export async function extractHTML(options: ExtractOptions = {}): Promise<string[
     window.writeStreamResponse('raw', streamContent)
   }
 
-  function flushStreamResponse(type: string, value: string, defaultValue?: string) {
+  function flushStreamResponse(type: string, value: string, extra?: string, detail?: string) {
     flushPlainResponse()
-    window.writeStreamResponse(type, value, defaultValue?.trim())
+    window.writeStreamResponse(type, value, extra?.trim(), detail?.trim())
   }
 
-  function processWhenHint(name: string, node: HTMLElement) {
+  function processWhenHint(node: HTMLElement) {
     // If the node has a `when` hint, clear the style attribute since it will be set by the protocol.
-    if (name === (prefix + 'when')) {
-      node.style.display = ''
-      if (node.style.cssText === '') {
-        node.removeAttribute('style')
-      }
+    node.style.display = ''
+    if (node.style.cssText === '') {
+      node.removeAttribute('style')
     }
   }
 
-  async function processRepeatHint(name: string, node: HTMLElement) {
+  async function processRepeatHint(node: HTMLElement) {
     // Special treatment for repeat hints, we need to extract the template and the style.
     // This is needed since css modules are not declarative. https://github.com/WICG/webcomponents/issues/939
-    if (name === (prefix + 'repeat')) {
-      const tag = node.getAttribute('w-component')
-      if (tag && !templateCache[tag]) {
-        const repeatNode = document.createElement(tag)
+    const tag = node.getAttribute('w-component')
+    if (tag && !templateCache[tag]) {
+      const repeatNode = document.createElement(tag)
 
-        // Repeat templates should be kept in the body so that the shadowroot can reference
-        // it when that tag is created. The reason, @customElements tag is evaluated right
-        // at beginning before the custom element is registered, so it is expecting a template
-        // to be available. Instead of fetching it from the server, we can keep it in the body.
-        document.getElementById(tag)?.classList.remove('internal-html-module')
+      // Repeat templates should be kept in the body so that the shadowroot can reference
+      // it when that tag is created. The reason, @customElements tag is evaluated right
+      // at beginning before the custom element is registered, so it is expecting a template
+      // to be available. Instead of fetching it from the server, we can keep it in the body.
+      document.getElementById(tag)?.classList.remove('internal-html-module')
 
-        // Add it to the body so the shadowroot is created.
-        document.body.appendChild(repeatNode)
+      // Add it to the body so the shadowroot is created.
+      document.body.appendChild(repeatNode)
 
-        const lines = []
-        const templateNode = repeatNode.shadowRoot ? repeatNode.shadowRoot : repeatNode
-        const callback: VisitCall = {
-          addLine: (line: string | undefined, _indent?: string) => {
-            if (!line || !line.trim()) return
-            lines.push(line)
-          },
-          flushPlainResponse: () => {},
-          flushStreamResponse: () => {},
-        }
-
-        let style = undefined
-        if (repeatNode.module) {
-          if (options.useLinkCss) {
-            // callback.addLine(
-            //   `<link rel="stylesheet" href="${repeatNode.module}">`,
-            //   '  ',
-            // )
-            preloadCss.add(repeatNode.module)
-          } else {
-            const cssContents = await readCSS(`./${repeatNode.module}.css`)
-            style = cssContents.join('\n')
-            removeLinkTagIfExists(repeatNode)
-          }
-        } else {
-          console.error('No CSS Module found for', tag)
-        }
-
-        for (const child of Array.from(templateNode.childNodes)) {
-          if (child.nodeType === Node.ELEMENT_NODE) {
-            await visitNode(child as HTMLElement, callback, '  ')
-          } else {
-            lines.push(child.textContent?.trim())
-          }
-        }
-
-        templateCache[tag] = {
-          template: lines.join('\n'),
-          style,
-        }
-
-        return tag
+      const lines = []
+      const templateNode = repeatNode.shadowRoot ? repeatNode.shadowRoot : repeatNode
+      const callback: VisitCall = {
+        addLine: (line: string | undefined, _indent?: string) => {
+          if (!line || !line.trim()) return
+          lines.push(line)
+        },
+        flushPlainResponse: () => {},
+        flushStreamResponse: () => {},
       }
+
+      let style = undefined
+      if (repeatNode.module) {
+        if (options.useLinkCss) {
+          // callback.addLine(
+          //   `<link rel="stylesheet" href="${repeatNode.module}">`,
+          //   '  ',
+          // )
+          preloadCss.add(repeatNode.module)
+        } else {
+          const cssContents = await readCSS(`./${repeatNode.module}.css`)
+          style = cssContents.join('\n')
+          removeLinkTagIfExists(repeatNode)
+        }
+      } else {
+        console.error('No CSS Module found for', tag)
+      }
+
+      for (const child of Array.from(templateNode.childNodes)) {
+        if (child.nodeType === Node.ELEMENT_NODE) {
+          await visitNode(child as HTMLElement, callback, '  ')
+        } else {
+          lines.push(child.textContent?.trim())
+        }
+      }
+
+      templateCache[tag] = {
+        template: lines.join('\n'),
+        style,
+      }
+
+      return tag
     }
     return undefined
   }
@@ -149,7 +145,7 @@ export async function extractHTML(options: ExtractOptions = {}): Promise<string[
   interface VisitCall {
     addLine: (line: string | undefined, indent?: string) => void
     flushPlainResponse: () => void
-    flushStreamResponse: (type: string, value: string, defaultValue?: string) => void
+    flushStreamResponse: (type: string, value: string, extra?: string, detail?: string) => void
   }
 
   /**
@@ -183,24 +179,60 @@ export async function extractHTML(options: ExtractOptions = {}): Promise<string[
 
     // Print attributes
     const attributeFastMap = new Map()
+    const attributeBindingArray = []
     let repeatTemplate = undefined
 
     for (let i = 0; i < node.attributes.length; i++) {
       const name = node.attributes[i].name
       const value = node.attributes[i].value
-      tag += ' ' + name + '="' + value + '"'
+      const hasPrefix = name.startsWith(prefix)
 
-      if (name.startsWith(prefix)) {
-        repeatTemplate = await processRepeatHint(name, node)
-        processWhenHint(name, node)
+      // When the unprefixed attribute exists, skip the attribute without the prefix
+      // since protocol will add it.
+      if (hasPrefix || !node.attributes.getNamedItem(`f-${name}`)) {
+        tag += ' ' + name + '="' + value + '"'
+      }
+
+      if (hasPrefix) {
+        const isRepeatAttribute = name === (prefix + 'repeat')
+        const isWhenAttribute = name === (prefix + 'when')
+        const isSignalAttribute = name === (prefix + 'signal')
+        const isRefAttribute = name === (prefix + 'ref')
+        const isEventAttribute = name.startsWith(prefix + 'on')
+
+        if (!isRepeatAttribute && !isWhenAttribute && !isSignalAttribute && !isRefAttribute && !isEventAttribute) {
+          const attributeName = name.substring(prefix.length)
+          const attributeValue = node.attributes.getNamedItem(attributeName)?.value
+          attributeBindingArray.push({ name: attributeName, value, defaultValue: attributeValue })
+          continue
+        }
+
+        if (isRepeatAttribute) {
+          repeatTemplate = await processRepeatHint(node)
+        }
+
+        if (isWhenAttribute) {
+          processWhenHint(node)
+        }
+
         attributeFastMap.set(name, value)
       }
     }
 
     // For `when` hints, stream the protocol so that caller can set the style attribute.
-    if (attributeFastMap.has(prefix + 'when')) {
+    // For attribute bindings, stream the protocol so that caller can set the attribute.
+    const hasWhenHint = attributeFastMap.has(prefix + 'when')
+    const hasAttributeBindingsHint = attributeBindingArray.length > 0
+    if (hasWhenHint || hasAttributeBindingsHint) {
       callback.addLine(tag, indent)
-      callback.flushStreamResponse('when', attributeFastMap.get(prefix + 'when'))
+      if (hasAttributeBindingsHint) {
+        attributeBindingArray.forEach(({ name, value, defaultValue }) => {
+          callback.flushStreamResponse('attribute', value, name, defaultValue)
+        })
+      }
+      if (hasWhenHint) {
+        callback.flushStreamResponse('when', attributeFastMap.get(prefix + 'when'))
+      }
       callback.addLine('>', indent)
     } else {
       callback.addLine(tag + '>', indent)
