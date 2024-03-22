@@ -2,7 +2,7 @@ import '@microsoft/fast-ssr/install-dom-shim.js'
 import { html } from '@microsoft/fast-element'
 import fastSSR from '@microsoft/fast-ssr'
 import { createWindow, installWindowOnGlobal } from '@microsoft/fast-ssr/dom-shim'
-import '../client/src/counter-element.js'
+import '../client/index.js'
 
 installWindowOnGlobal(createWindow({ isSSR: true }))
 const { templateRenderer } = fastSSR()
