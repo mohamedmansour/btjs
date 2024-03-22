@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 import { Command, Option } from 'commander'
 import { HandleNodeBuild, HandleServe, HandleWebBuild } from './cli.js'
 

@@ -120,6 +120,8 @@ importers:
         specifier: ^4.18.3
         version: 4.18.3
 
+  packages/server-rust: {}
+
   packages/tools:
     dependencies:
       '@btjs/protocol-js':

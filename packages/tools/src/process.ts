@@ -7,6 +7,7 @@ import express from 'express'
 import { existsSync, readFile, writeFile } from 'node:fs'
 import { AddressInfo } from 'node:net'
 import { join, resolve } from 'node:path'
+import { PerformanceObserver, performance } from 'node:perf_hooks'
 import { chromium } from 'playwright'
 import { extractHTML } from './extract.js'
 
@@ -22,16 +23,26 @@ export function HandleBuild(appPath: string, options: BuildOptions) {
     process.exit(1)
   }
 
-  const app = express()
-  app.use(express.static(appPath))
-
   let streamResponses: BuildTimeRenderingStream[] = []
   let streamTemplates: BuildTimeRenderingStreamTemplateRecords = {}
   let headChunkIndex = 0
 
-  const server = app.listen(async () => {
-    console.log('preparing browser')
+  new PerformanceObserver((list) => {
+    list.getEntries().forEach((entry) => {
+      console.log(entry.name, entry.startTime)
+      if (entry.name === 'closed') {
+        console.log('---')
+        console.log('chunks created:', streamResponses.length)
+        console.log('duration:', entry.startTime - performance.getEntriesByName('started')[0].startTime)
+      }
+    })
+  }).observe({ entryTypes: ['mark'], buffered: true })
 
+  performance.mark('started')
+  const app = express()
+  app.use(express.static(appPath))
+
+  const server = app.listen(async () => {
     const browser = await chromium.launch({
       channel: 'msedge',
     })
@@ -42,8 +53,8 @@ export function HandleBuild(appPath: string, options: BuildOptions) {
         console.log('ERROR:', msg.text())
       }
     })
+    performance.mark('opened')
 
-    console.log('visiting app')
     const address = server.address() as AddressInfo
     await page.goto(`http://localhost:${address.port}`)
 
@@ -124,8 +135,7 @@ export function HandleBuild(appPath: string, options: BuildOptions) {
     await page.exposeFunction('writeTemplates', (templates: string) => {
       streamTemplates = JSON.parse(templates) as BuildTimeRenderingStreamTemplateRecords
     })
-
-    console.log('dumping stream')
+    performance.mark('visited')
     try {
       const htmlLines = await page.evaluate(extractHTML, options)
       writeFile(join(appPath, 'index.debug.html'), htmlLines.join('\n'), (err) => {
@@ -136,6 +146,7 @@ export function HandleBuild(appPath: string, options: BuildOptions) {
     } catch (e) {
       console.error('Error extracting HTML:', e)
     }
+    performance.mark('parsed')
 
     const streamProtocol: BuildTimeRenderingProtocol = {
       streams: streamResponses,
@@ -147,10 +158,10 @@ export function HandleBuild(appPath: string, options: BuildOptions) {
         console.error('Error writing streams file:', err)
       }
     })
+    performance.mark('saved')
 
-    console.log('stream partials:', streamResponses.length)
-    console.log('closing')
     await browser.close()
     server.close()
+    performance.mark('closed')
   })
 }

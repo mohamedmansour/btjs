@@ -108,7 +108,6 @@ Whenever the signal `url` changes, it will update the `href` attribute for that 
 To facilitate server streaming and ensure compatibility with any language server, we require a protocol. The following definitions are provided for prototyping purposes.
 
 ```ts
-
 interface BuildTimeRenderingStreamAttribute {
   type: 'attribute'
   name: string
