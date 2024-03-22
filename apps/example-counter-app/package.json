@@ -4,6 +4,7 @@
   "description": "",
   "main": "./dist/index.js",
   "type": "module",
+  "private": true,
   "scripts": {
     "clean": "rimraf -rf dist",
     "build": "npm run clean && npm run build:client && npm run build:server",
