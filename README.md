@@ -108,13 +108,8 @@ Whenever the signal `url` changes, it will update the `href` attribute for that 
 To facilitate server streaming and ensure compatibility with any language server, we require a protocol. The following definitions are provided for prototyping purposes.
 
 ```ts
-interface BuildTimeRenderingStreamRepeat {
-  type: 'repeat'
-  value: string
-  template: string
-}
 
-interface BuildTimeRenderingStreamRaw {
+interface BuildTimeRenderingStreamAttribute {
   type: 'attribute'
   name: string
   value: string
@@ -123,6 +118,12 @@ interface BuildTimeRenderingStreamRaw {
 interface BuildTimeRenderingStreamRaw {
   type: 'raw'
   value: string
+}
+
+interface BuildTimeRenderingStreamRepeat {
+  type: 'repeat'
+  value: string
+  template: string
 }
 
 interface BuildTimeRenderingStreamSignal {
