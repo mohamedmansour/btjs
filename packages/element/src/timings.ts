@@ -17,6 +17,7 @@ const po = new PerformanceObserver((entryList) => {
     fcpWidget.style.bottom = '0'
     fcpWidget.style.right = '0'
     fcpWidget.style.backgroundColor = 'white'
+    fcpWidget.style.color = 'black'
     fcpWidget.style.padding = '10px'
     fcpWidget.style.border = '1px solid black'
     fcpWidget.style.zIndex = '999'
