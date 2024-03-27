@@ -1,6 +1,5 @@
 import { findValueByDottedPath } from '@btjs/eval-js'
 
-
 export async function processTemplate(source: string, state: Object) {
   const kLeader = '{{'
   const kTrailer = '}}'
